@@ -59,7 +59,9 @@ A replacement for auditors or regulators
 CompliGuard enforces controls — it does not encode laws.
 
 🏗️ High-Level Architecture
+
 External Regulated APIs
+
 (reserves, liabilities, risk signals)
         │
         │  (Confidential HTTP)
