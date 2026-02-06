@@ -1,307 +1,316 @@
-CompliGuard
+<div align="center">
 
-Privacy-Preserving Compliance Enforcement with Chainlink CRE
+# 🛡️ CompliGuard
 
-CompliGuard is a production-grade compliance enforcement engine that continuously evaluates and enforces financial safety controls using deterministic rules, private offchain data, and Chainlink’s Runtime Environment (CRE).
+### Privacy-Preserving Compliance Enforcement with Chainlink CRE
 
-Unlike traditional compliance tools that rely on periodic reporting and trust, CompliGuard treats compliance as a runtime system property — evaluated continuously and enforced automatically.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Chainlink CRE](https://img.shields.io/badge/Chainlink-CRE-375BD2)](https://chain.link)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 
-What Problem Does CompliGuard Solve?
+*Continuous compliance enforcement for financial systems — privacy-preserving, deterministic, and automated.*
+
+[Features](#-features) • [Architecture](#-architecture) • [Quick Start](#-quick-start) • [Compliance Controls](#-compliance-controls) • [Documentation](#-documentation)
+
+</div>
+
+---
+
+## 📋 Overview
+
+**CompliGuard** is a production-grade compliance enforcement engine that continuously evaluates and enforces financial safety controls using deterministic rules, private offchain data, and Chainlink's Compute Runtime Environment (CRE).
+
+Unlike traditional compliance tools that rely on periodic reporting and trust, CompliGuard treats compliance as a **runtime system property** — evaluated continuously and enforced automatically.
+
+### The Problem
 
 Modern financial systems (stablecoins, tokenized assets, treasuries, custodians) rely on sensitive, non-public data to meet regulatory expectations:
 
-Are reserves still covering liabilities?
+- Are reserves still covering liabilities?
+- Is proof of backing recent and reliable?
+- Are reserves held in acceptable, diversified assets?
+- What happens immediately when those conditions fail?
 
-Is proof of backing recent and reliable?
+**Existing approaches are:** periodic, manual, document-driven, and slow to react.
 
-Are reserves held in acceptable, diversified assets?
+**CompliGuard provides:** continuous, automated enforcement — without exposing sensitive data.
 
-What happens immediately when those conditions fail?
+---
 
-Existing approaches are:
+## ✨ Features
 
-periodic
+| Feature | Description |
+|---------|-------------|
+| 🔄 **Continuous Monitoring** | Real-time evaluation of compliance controls |
+| 🔐 **Privacy-Preserving** | Sensitive data never exposed on-chain |
+| ⚡ **Deterministic Rules** | Machine-readable, auditable policy engine |
+| 🔗 **Chainlink CRE** | Secure offchain orchestration |
+| 🤖 **AI-Enhanced** | Human-readable explanations (non-decisional) |
+| 📊 **Multi-Control** | Reserve ratio, freshness, asset quality |
 
-manual
+### What CompliGuard Is
 
-document-driven
+✅ A compliance **enforcement engine**  
+✅ A Chainlink CRE **workflow**  
+✅ A deterministic **control plane**  
+✅ A privacy-preserving **architecture**  
+✅ A foundation for **automated safeguards**
 
-slow to react
+### What CompliGuard Is Not
 
-CompliGuard provides continuous, automated enforcement of these controls — without exposing sensitive data.
+❌ A legal opinion  
+❌ A regulatory certification  
+❌ A sanctions adjudication engine  
+❌ A dashboard or reporting tool  
+❌ A replacement for auditors or regulators
 
-🧠 What CompliGuard Is (and Is Not)
+> **CompliGuard enforces controls — it does not encode laws.**
 
-✅ What It Is
+---
 
-A compliance enforcement engine
+## 🏗️ Architecture
 
-A Chainlink CRE workflow
-
-A deterministic control plane
-
-A privacy-preserving architecture
-
-A foundation for automated safeguards
-
-❌ What It Is Not
-
-A legal opinion
-
-A regulatory certification
-
-A sanctions adjudication engine
-
-A dashboard or reporting tool
-
-A replacement for auditors or regulators
-
-CompliGuard enforces controls — it does not encode laws.
-
-🏗️ High-Level Architecture
-
-External Regulated APIs
-
-(reserves, liabilities, risk signals)
-        │
-        │  (Confidential HTTP)
-        ▼
-Chainlink Runtime Environment (CRE)
-        │
-        │  (offchain execution)
-        ▼
-Deterministic Policy Engine
-        │
-        ▼
-Compliance Status + Evidence
-(GREEN / YELLOW / RED)
-
+```
+┌─────────────────────────────────────┐
+│     External Regulated APIs         │
+│  (reserves, liabilities, signals)   │
+└──────────────────┬──────────────────┘
+                   │ Confidential HTTP
+                   ▼
+┌─────────────────────────────────────┐
+│   Chainlink Runtime Environment     │
+│            (CRE)                    │
+│      Offchain Execution Layer       │
+└──────────────────┬──────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────┐
+│    Deterministic Policy Engine      │
+│   ┌─────────┬─────────┬─────────┐   │
+│   │ Reserve │  Proof  │  Asset  │   │
+│   │  Ratio  │Freshness│ Quality │   │
+│   └─────────┴─────────┴─────────┘   │
+└──────────────────┬──────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────┐
+│     Compliance Status + Evidence    │
+│       🟢 GREEN │ 🟡 YELLOW │ 🔴 RED  │
+└─────────────────────────────────────┘
+```
 
 CRE acts as the orchestration and reliability layer, coordinating private data ingestion, policy execution, and output propagation.
 
-📏 Enforced Compliance Controls (Tier 1)
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js >= 18.0.0
+- npm or yarn
+- Chainlink CRE access (for production)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/your-org/compliGuard.git
+cd compliGuard
+
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env.example .env
+
+# Run in development mode
+npm run dev
+```
+
+### Running Tests
+
+```bash
+# Unit tests
+npm test
+
+# Integration tests
+npm run test:integration
+
+# Coverage report
+npm run test:coverage
+```
+
+---
+
+## 📏 Compliance Controls
 
 CompliGuard enforces explicit, machine-readable financial safety controls.
 
-1️⃣ Asset Coverage (Reserve Ratio)
+### 1️⃣ Asset Coverage (Reserve Ratio)
 
+```
 reserve_ratio = reserves / liabilities
+```
 
-Condition	Status
-≥ 1.02	GREEN
-1.00–1.019	YELLOW
-< 1.00	RED
+| Condition | Status |
+|-----------|--------|
+| ≥ 1.02 | 🟢 GREEN |
+| 1.00–1.019 | 🟡 YELLOW |
+| < 1.00 | 🔴 RED |
 
-2️⃣ Proof Freshness
+### 2️⃣ Proof Freshness
 
-Attestation Age	Status
-≤ 6 hours	GREEN
-6–24 hours	YELLOW
-> 24 hours	RED
+| Attestation Age | Status |
+|-----------------|--------|
+| ≤ 6 hours | 🟢 GREEN |
+| 6–24 hours | 🟡 YELLOW |
+| > 24 hours | 🔴 RED |
 
-3️⃣ Asset Quality & Concentration
+### 3️⃣ Asset Quality & Concentration
 
-Disallowed assets → RED
+| Condition | Status |
+|-----------|--------|
+| Disallowed assets present | 🔴 RED |
+| Risky assets > 30% | 🔴 RED |
+| Single-asset concentration > 75% | 🟡 YELLOW |
 
-Risky assets > 30% → RED
+### Aggregation Rule
 
-Single-asset concentration > 75% → YELLOW
-
-Aggregation Rule
-
-Worst-of wins.
-If any required control fails, the system is non-compliant.
+> **Worst-of wins.** If any required control fails, the system is non-compliant.
 
 This mirrors real-world prudential logic used by regulators and auditors.
 
-🔐 Regulatory Alignment
+---
+
+## 🔐 Privacy Architecture
+
+CompliGuard is **privacy-preserving by design**, using Chainlink CRE's Confidential HTTP capability to securely integrate sensitive Web2 data into decentralized workflows.
+
+### Data Classification
+
+| Never Exposed | Safely Exposed |
+|---------------|----------------|
+| API keys and credentials | Compliance status (GREEN/YELLOW/RED) |
+| Raw reserve values | Policy version |
+| Liability values | Cryptographic evidence hash |
+| Detailed asset composition | Evaluation timestamp |
+| Internal evaluation logic | Human-readable explanation |
+
+### Privacy Flow
+
+```
+[Confidential HTTP Fetch] → [Offchain Policy Evaluation] → [Status + Evidence Emission]
+```
+
+---
+
+## 🔐 Regulatory Alignment
 
 CompliGuard is policy-agnostic and designed to operationalize regulatory requirements without hardcoding statutory language.
 
-Alignment with GENIUS, CLARITY, and Sanctions Regimes
+### Alignment with Modern Regulation
 
-Modern regulation emphasizes:
+Modern regulation (GENIUS, CLARITY, etc.) emphasizes:
 
-Continuous monitoring
+- ✅ Continuous monitoring
+- ✅ Verified reserve backing
+- ✅ Clear, enforceable controls
+- ✅ Immediate response to breaches
+- ✅ Use of non-public, regulated data
 
-Verified reserve backing
+> **Laws define obligations. Risk systems detect exposure. CompliGuard enforces consequences.**
 
-Clear, enforceable controls
+---
 
-Immediate response to breaches
+## 🤖 AI Usage
 
-Use of non-public, regulated data
+AI is used **only** to generate human-readable explanations of deterministic outcomes.
 
-CompliGuard supports these objectives by enforcing financial safety constraints as runtime rules.
+- AI does **not** decide compliance
+- AI **cannot** override rules
+- AI failure does **not** affect enforcement
 
-What CompliGuard Enforces
+This ensures: **auditability**, **determinism**, and **explainability without risk**.
 
-Asset coverage controls
+---
 
-Proof freshness controls
-
-Asset quality & concentration controls
-
-Deterministic enforcement outcomes
-
-What CompliGuard Does Not Do
-
-Encode legal text
-
-Issue compliance certifications
-
-Identify sanctioned parties
-
-Make jurisdiction-specific legal claims
-
-Laws define obligations.
-Risk systems detect exposure.
-CompliGuard enforces consequences.
-
-🔒 Privacy Architecture (Privacy Track)
-
-CompliGuard is privacy-preserving by design, using Chainlink CRE’s Confidential HTTP capability to securely integrate sensitive Web2 data into decentralized workflows.
-
-Why Privacy Matters
-
-Compliance workflows rely on:
-
-reserve balances
-
-liabilities
-
-asset composition
-
-regulated API credentials
-
-Publishing this data onchain or in logs is unacceptable for institutional systems.
-
-Confidential HTTP Usage
-
-CompliGuard uses CRE Confidential HTTP to:
-
-securely store API credentials
-
-fetch sensitive reserve attestations
-
-prevent request/response exposure
-
-ensure sensitive values never appear onchain
-
-[Confidential HTTP Fetch]
-        ↓
-[Offchain Policy Evaluation]
-        ↓
-[Status + Evidence Emission]
-
-What Is Protected vs. Exposed
-
-Never exposed:
-
-API keys and credentials
-
-Raw reserve values
-
-Liability values
-
-Detailed asset composition
-
-Internal evaluation logic
-
-Safely exposed:
-
-Compliance status (GREEN / YELLOW / RED)
-
-Policy version
-
-Cryptographic evidence hash
-
-Evaluation timestamp
-
-Human-readable explanation (no sensitive values)
-
-Privacy Guarantee
-
-CompliGuard demonstrates that decentralized workflows can:
-
-enforce real-world compliance rules
-
-use regulated, non-public APIs
-
-preserve confidentiality
-
-remain auditable without disclosure
-
-🤖 AI Usage (Responsible by Design)
-
-AI is used only to generate human-readable explanations of deterministic outcomes.
-
-AI does not decide compliance
-
-AI cannot override rules
-
-AI failure does not affect enforcement
-
-This ensures:
-
-auditability
-
-determinism
-
-explainability without risk
-
-⚙️ Chainlink CRE Usage (Required)
+## ⚙️ Chainlink CRE Integration
 
 CompliGuard uses Chainlink CRE to:
 
-orchestrate offchain workflows
+- 🔄 Orchestrate offchain workflows
+- 🔐 Securely integrate external APIs
+- 🔁 Manage retries and failures
+- 🖥️ Execute confidential computation
+- ✅ Produce verifiable execution outcomes
 
-securely integrate external APIs
+**CRE is the control plane that makes CompliGuard production-ready.**
 
-manage retries and failures
+---
 
-execute confidential computation
+## 🧪 Demo Flow
 
-produce verifiable execution outcomes
+A typical demonstration (3–5 minutes):
 
-CRE is the control plane that makes CompliGuard production-ready.
+1. System starts **🟢 GREEN**
+2. Confidential reserve data is ingested
+3. Policy rules are evaluated offchain
+4. A control threshold is violated
+5. Status flips to **🔴 RED**
+6. Explanation is generated
+7. **Sensitive data remains private throughout**
 
-🧪 Demo Flow (3–5 Minutes)
+---
 
-System starts GREEN
+## 📁 Project Structure
 
-Confidential reserve data is ingested
+```
+compliGuard/
+├── src/
+│   ├── core/              # Core policy engine
+│   │   ├── engine.ts      # Main compliance engine
+│   │   ├── rules/         # Compliance rule definitions
+│   │   └── types.ts       # Type definitions
+│   ├── api/               # Mock APIs for testing
+│   │   └── mock-server.ts # Reserve/liability mock server
+│   ├── cre/               # Chainlink CRE integration
+│   │   └── workflow.ts    # CRE workflow definitions
+│   └── utils/             # Utility functions
+├── tests/                 # Test suites
+├── docs/                  # Documentation
+└── config/                # Configuration files
+```
 
-Policy rules are evaluated offchain
+---
 
-A control threshold is violated
+## 🏁 Hackathon Tracks
 
-Status flips to RED
+| Track | Status |
+|-------|--------|
+| Risk & Compliance | ✅ Primary |
+| Privacy (Confidential HTTP) | ✅ Primary |
+| AI | ➕ Supporting |
+| Infrastructure / Orchestration | ➕ Supporting |
 
-Explanation is generated
+---
 
-Sensitive data remains private throughout
+## 🧩 Why This Matters
 
-🏁 Tracks Submitted
+> **Compliance cannot be slower than risk.**
 
-✅ Risk & Compliance
+CompliGuard turns compliance from a periodic promise into a **continuously enforced system property** — while preserving privacy, auditability, and institutional trust.
 
-✅ Privacy (Confidential HTTP)
+---
 
-➕ AI (supporting role)
+## 📄 License
 
-➕ Infrastructure / Orchestration
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-🧩 Why This Matters
+---
 
-Compliance cannot be slower than risk.
+<div align="center">
 
-CompliGuard turns compliance from a periodic promise into a continuously enforced system property — while preserving privacy, auditability, and institutional trust.
+**CompliGuard** — *Privacy-preserving compliance enforcement, powered by Chainlink CRE.*
 
-📄 License
-
-MIT License
-
-One-Sentence Summary
-
-CompliGuard is a privacy-preserving compliance enforcement engine that continuously enforces financial safety controls using deterministic rules orchestrated through Chainlink CRE.
+</div>
