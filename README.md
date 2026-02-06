@@ -31,6 +31,7 @@ slow to react
 CompliGuard provides continuous, automated enforcement of these controls — without exposing sensitive data.
 
 🧠 What CompliGuard Is (and Is Not)
+
 ✅ What It Is
 
 A compliance enforcement engine
@@ -81,17 +82,21 @@ CRE acts as the orchestration and reliability layer, coordinating private data i
 CompliGuard enforces explicit, machine-readable financial safety controls.
 
 1️⃣ Asset Coverage (Reserve Ratio)
+
 reserve_ratio = reserves / liabilities
 
 Condition	Status
 ≥ 1.02	GREEN
 1.00–1.019	YELLOW
 < 1.00	RED
+
 2️⃣ Proof Freshness
+
 Attestation Age	Status
 ≤ 6 hours	GREEN
 6–24 hours	YELLOW
 > 24 hours	RED
+
 3️⃣ Asset Quality & Concentration
 
 Disallowed assets → RED
