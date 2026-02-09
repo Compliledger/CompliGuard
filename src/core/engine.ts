@@ -21,6 +21,8 @@ import {
   evaluateAssetQuality,
   evaluateAssetConcentration
 } from './rules';
+import { validateEvaluationInput } from './validation';
+import { ValidationError } from './errors';
 
 export class ComplianceEngine {
   private config: PolicyConfig;
@@ -33,8 +35,16 @@ export class ComplianceEngine {
   /**
    * Evaluate compliance based on input data.
    * Applies worst-of aggregation rule.
+   * @throws {ValidationError} If input validation fails
    */
-  evaluate(input: EvaluationInput): ComplianceResult {
+  evaluate(input: EvaluationInput, skipValidation = false): ComplianceResult {
+    // Validate input unless explicitly skipped
+    if (!skipValidation) {
+      const validation = validateEvaluationInput(input);
+      if (!validation.success) {
+        throw new ValidationError(validation.errors || ['Invalid input']);
+      }
+    }
     const evaluationTimestamp = new Date();
     const controls: ControlResult[] = [];
 

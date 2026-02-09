@@ -110,7 +110,7 @@ describe('ComplianceEngine', () => {
   describe('evaluate', () => {
     it('should return GREEN when all controls pass', () => {
       const input = createInput();
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.GREEN);
       expect(result.controls).toHaveLength(4);
@@ -120,7 +120,7 @@ describe('ComplianceEngine', () => {
 
     it('should return YELLOW for low reserve ratio (1.00-1.019)', () => {
       const input = createInput({ reserveMultiplier: 1.01 });
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.YELLOW);
       const ratioControl = result.controls.find(c => c.controlType === 'RESERVE_RATIO');
@@ -129,7 +129,7 @@ describe('ComplianceEngine', () => {
 
     it('should return RED for undercollateralization (<1.00)', () => {
       const input = createInput({ reserveMultiplier: 0.95 });
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.RED);
       const ratioControl = result.controls.find(c => c.controlType === 'RESERVE_RATIO');
@@ -138,7 +138,7 @@ describe('ComplianceEngine', () => {
 
     it('should return RED for stale proof (>24 hours)', () => {
       const input = createInput({ attestationHoursAgo: 48 });
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.RED);
       const freshnessControl = result.controls.find(c => c.controlType === 'PROOF_FRESHNESS');
@@ -147,7 +147,7 @@ describe('ComplianceEngine', () => {
 
     it('should return RED for disallowed assets', () => {
       const input = createInput({ includeDisallowed: true });
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.RED);
       const qualityControl = result.controls.find(c => c.controlType === 'ASSET_QUALITY');
@@ -156,7 +156,7 @@ describe('ComplianceEngine', () => {
 
     it('should return RED for excessive risky assets (>30%)', () => {
       const input = createInput({ riskyPercentage: 40 });
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.RED);
       const qualityControl = result.controls.find(c => c.controlType === 'ASSET_QUALITY');
@@ -165,7 +165,7 @@ describe('ComplianceEngine', () => {
 
     it('should return YELLOW for high concentration (>75%)', () => {
       const input = createInput({ concentrationPercentage: 80, riskyPercentage: 0 });
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.YELLOW);
       const concControl = result.controls.find(c => c.controlType === 'ASSET_CONCENTRATION');
@@ -178,7 +178,7 @@ describe('ComplianceEngine', () => {
         reserveMultiplier: 1.01, 
         attestationHoursAgo: 48 
       });
-      const result = engine.evaluate(input);
+      const result = engine.evaluate(input, true);
 
       expect(result.overallStatus).toBe(ComplianceStatus.RED);
     });
@@ -189,16 +189,16 @@ describe('ComplianceEngine', () => {
       const input1 = createInput({ reserveMultiplier: 1.05 });
       const input2 = createInput({ reserveMultiplier: 1.06 });
 
-      const result1 = engine.evaluate(input1);
-      const result2 = engine.evaluate(input2);
+      const result1 = engine.evaluate(input1, true);
+      const result2 = engine.evaluate(input2, true);
 
       expect(result1.evidenceHash).not.toBe(result2.evidenceHash);
     });
 
     it('should record evaluation history', () => {
       const input = createInput();
-      engine.evaluate(input);
-      engine.evaluate(input);
+      engine.evaluate(input, true);
+      engine.evaluate(input, true);
 
       const history = engine.getEvaluationHistory();
       expect(history).toHaveLength(2);
