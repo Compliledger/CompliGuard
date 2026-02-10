@@ -32,8 +32,8 @@ export function getHealthStatus(): HealthStatus {
     lastEvaluation,
     components: {
       policyEngine: true,
-      reserveApi: false, // Would check actual API connectivity
-      liabilityApi: false // Would check actual API connectivity
+      reserveApi: Boolean(process.env.RESERVE_API_URL),
+      liabilityApi: Boolean(process.env.LIABILITY_API_URL)
     }
   };
 }
@@ -53,9 +53,10 @@ async function main(): Promise<void> {
     uptime: health.uptime
   });
 
-  logger.info('CompliGuard initialized successfully');
-  logger.info('Run `npm run demo` to see the compliance engine in action');
-  logger.info('Run `npm run mock-server` to start the mock API server');
+  logger.info('Quickstart:', {});
+  logger.info('  Terminal 1: npm run mock-server');
+  logger.info('  Terminal 2: npm run workflow');
+  logger.info('Optional: npm run demo (scenario coverage)');
 }
 
 // Run if executed directly

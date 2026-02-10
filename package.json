@@ -15,7 +15,10 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "mock-server": "ts-node src/api/mock-server.ts",
-    "demo": "ts-node src/demo.ts"
+    "mock-api": "ts-node src/api/mock-server.ts",
+    "workflow": "ts-node src/cre/run.ts",
+    "demo": "ts-node src/demo.ts",
+    "demo:local": "node -e \"console.log('Terminal 1: npm run mock-server'); console.log('Terminal 2: npm run workflow');\""
   },
   "keywords": [
     "compliance",

@@ -18,7 +18,7 @@
 
 ## 📋 Overview
 
-**CompliGuard** is a production-grade compliance enforcement engine that continuously evaluates and enforces financial safety controls using deterministic rules, private offchain data, and Chainlink's Compute Runtime Environment (CRE).
+**CompliGuard** is a production-grade compliance enforcement engine that continuously evaluates and enforces financial safety controls using deterministic rules, private offchain data, and Chainlink's Runtime Environment (CRE).
 
 Unlike traditional compliance tools that rely on periodic reporting and trust, CompliGuard treats compliance as a **runtime system property** — evaluated continuously and enforced automatically.
 
@@ -115,8 +115,8 @@ CRE acts as the orchestration and reliability layer, coordinating private data i
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/compliGuard.git
-cd compliGuard
+git clone https://github.com/Compliledger/CompliGuard.git
+cd CompliGuard
 
 # Install dependencies
 npm install
@@ -126,6 +126,37 @@ cp .env.example .env
 
 # Run in development mode
 npm run dev
+```
+
+---
+
+## 🔗 Chainlink Usage (Required)
+
+- `src/cre/workflow.ts` — CRE workflow definition and orchestration entrypoint
+- `(Feb 14) src/cre/confidential-http.ts` — Confidential HTTP integration (privacy track)
+- Additional Chainlink-related files will be added alongside CRE features
+
+---
+
+## 🧪 Run with CRE (Simulation / Deployment)
+
+```bash
+# Simulate the workflow (placeholder commands; align with CRE CLI)
+cre workflow simulate --workflow ./src/cre/workflow.ts
+
+# Deploy the workflow (placeholder commands; align with CRE CLI)
+cre workflow deploy --workflow ./src/cre/workflow.ts
+```
+
+**Local workflow run (today):**
+```bash
+npm install
+
+# Terminal 1
+npm run mock-server
+
+# Terminal 2
+npm run workflow
 ```
 
 ### Running Tests

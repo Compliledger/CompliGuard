@@ -1,12 +1,14 @@
 /**
  * Chainlink CRE Workflow Definition
- * 
- * Defines the workflow structure for Chainlink Compute Runtime Environment.
- * This is a placeholder for the actual CRE integration.
+ *
+ * Defines the workflow structure for Chainlink Runtime Environment (CRE).
+ * Confidential HTTP integration will be enabled when the privacy track unlocks (Feb 14).
  */
 
-import { ComplianceEngine, EvaluationInput, ComplianceResult, ReserveData, LiabilityData, ApiResponse } from '../core';
+import { ComplianceEngine, EvaluationInput, ComplianceResult, ReserveData, LiabilityData } from '../core';
 import { logger, sha256 } from '../utils';
+import { createHttpClient, HttpClient, HttpClientMode } from './http';
+import { ReserveApiClient, LiabilityApiClient } from '../api/clients';
 
 /**
  * CRE Workflow Configuration
@@ -18,6 +20,11 @@ export interface CREWorkflowConfig {
   retryPolicy: {
     maxRetries: number;
     backoffMs: number;
+  };
+  httpMode: HttpClientMode;
+  api: {
+    reserveUrl: string;
+    liabilityUrl: string;
   };
   secrets: {
     reserveApiKey: string;
@@ -50,44 +57,6 @@ export interface WorkflowExecutionResult {
 }
 
 /**
- * Confidential HTTP Client (simulated)
- * In production, this would use CRE's Confidential HTTP capability
- */
-class ConfidentialHttpClient {
-  private baseUrl: string;
-  private apiKey: string;
-
-  constructor(baseUrl: string, apiKey: string) {
-    this.baseUrl = baseUrl;
-    this.apiKey = apiKey;
-  }
-
-  async fetch<T>(endpoint: string): Promise<ApiResponse<T>> {
-    try {
-      // In production, this would be a confidential HTTP request via CRE
-      const response = await fetch(`${this.baseUrl}${endpoint}`, {
-        headers: {
-          'X-API-Key': this.apiKey,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return await response.json() as ApiResponse<T>;
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date()
-      };
-    }
-  }
-}
-
-/**
  * CRE Workflow Executor
  * 
  * Orchestrates the compliance evaluation workflow using Chainlink CRE patterns.
@@ -95,22 +64,36 @@ class ConfidentialHttpClient {
 export class CREWorkflowExecutor {
   private config: CREWorkflowConfig;
   private engine: ComplianceEngine;
-  private reserveClient: ConfidentialHttpClient;
-  private liabilityClient: ConfidentialHttpClient;
+  private reserveHttp: HttpClient;
+  private liabilityHttp: HttpClient;
+  private reserveClient: ReserveApiClient;
+  private liabilityClient: LiabilityApiClient;
 
   constructor(config: CREWorkflowConfig) {
     this.config = config;
     this.engine = new ComplianceEngine();
-    
-    this.reserveClient = new ConfidentialHttpClient(
-      process.env.RESERVE_API_URL || 'http://localhost:3001',
+
+    this.reserveHttp = createHttpClient(
+      config.httpMode,
+      config.api.reserveUrl,
       config.secrets.reserveApiKey
     );
-    
-    this.liabilityClient = new ConfidentialHttpClient(
-      process.env.LIABILITY_API_URL || 'http://localhost:3001',
+
+    this.liabilityHttp = createHttpClient(
+      config.httpMode,
+      config.api.liabilityUrl,
       config.secrets.liabilityApiKey
     );
+
+    this.reserveClient = new ReserveApiClient(this.reserveHttp, {
+      retries: config.retryPolicy.maxRetries,
+      backoffMs: config.retryPolicy.backoffMs
+    });
+
+    this.liabilityClient = new LiabilityApiClient(this.liabilityHttp, {
+      retries: config.retryPolicy.maxRetries,
+      backoffMs: config.retryPolicy.backoffMs
+    });
   }
 
   /**
@@ -132,11 +115,11 @@ export class CREWorkflowExecutor {
 
     // Step 1: Fetch Reserve Data (Confidential)
     const reserveStep = await this.executeStep('fetch_reserves', async () => {
-      const response = await this.reserveClient.fetch<ReserveData>('/api/reserves');
+      const response = await this.reserveClient.getReserveData();
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to fetch reserves');
       }
-      reserves = response.data;
+      reserves = response.data as ReserveData;
       return { fetched: true, hash: sha256(reserves).substring(0, 16) };
     });
     steps.push(reserveStep);
@@ -147,11 +130,11 @@ export class CREWorkflowExecutor {
 
     // Step 2: Fetch Liability Data (Confidential)
     const liabilityStep = await this.executeStep('fetch_liabilities', async () => {
-      const response = await this.liabilityClient.fetch<LiabilityData>('/api/liabilities');
+      const response = await this.liabilityClient.getLiabilityData();
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to fetch liabilities');
       }
-      liabilities = response.data;
+      liabilities = response.data as LiabilityData;
       return { fetched: true, hash: sha256(liabilities).substring(0, 16) };
     });
     steps.push(liabilityStep);
@@ -268,15 +251,29 @@ export class CREWorkflowExecutor {
 export function createDefaultWorkflowConfig(): CREWorkflowConfig {
   return {
     workflowId: process.env.CRE_WORKFLOW_ID || 'compli-guard-workflow',
-    version: '1.0.0',
-    schedule: '*/5 * * * *', // Every 5 minutes
+    version: process.env.CRE_WORKFLOW_VERSION || 'v1.0.0',
+    schedule: process.env.CRE_SCHEDULE || '*/5 * * * *', // Every 5 minutes
     retryPolicy: {
-      maxRetries: 3,
-      backoffMs: 1000
+      maxRetries: Number(process.env.CRE_MAX_RETRIES || 3),
+      backoffMs: Number(process.env.CRE_BACKOFF_MS || 1000)
+    },
+    httpMode: (process.env.CRE_HTTP_MODE as HttpClientMode) || 'node',
+    api: {
+      reserveUrl: process.env.RESERVE_API_URL || 'http://localhost:3001',
+      liabilityUrl: process.env.LIABILITY_API_URL || 'http://localhost:3001'
     },
     secrets: {
       reserveApiKey: process.env.RESERVE_API_KEY || 'demo-key',
       liabilityApiKey: process.env.LIABILITY_API_KEY || 'demo-key'
     }
   };
+}
+
+/**
+ * Convenience entrypoint for local/CLI runs
+ */
+export async function runWorkflow(): Promise<WorkflowExecutionResult> {
+  const cfg = createDefaultWorkflowConfig();
+  const executor = new CREWorkflowExecutor(cfg);
+  return executor.execute();
 }

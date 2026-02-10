@@ -13,6 +13,7 @@ import {
   AssetRiskLevel,
   ApiResponse
 } from '../core/types';
+import { sha256 } from '../utils/hash';
 
 const app = express();
 app.use(express.json());
@@ -54,8 +55,8 @@ function generateReserveData(): ReserveData {
     const disallowedPct = 5;
     assets.push({
       id: 'disallowed-1',
-      name: 'Sanctioned Entity Token',
-      symbol: 'SANC_TOKEN',
+      name: 'Restricted Asset (Demo)',
+      symbol: 'RESTRICTED_ASSET',
       value: totalValue * (disallowedPct / 100),
       riskLevel: AssetRiskLevel.DISALLOWED,
       percentage: disallowedPct
@@ -99,11 +100,20 @@ function generateReserveData(): ReserveData {
   const attestationTime = new Date();
   attestationTime.setHours(attestationTime.getHours() - mockState.attestationAgeHours);
 
+  const hashInput = {
+    totalValue,
+    assets: assets.map(a => ({ symbol: a.symbol, pct: a.percentage })),
+    attestationAgeHours: mockState.attestationAgeHours,
+    includeDisallowedAsset: mockState.includeDisallowedAsset,
+    riskyAssetPercentage: mockState.riskyAssetPercentage,
+    concentrationPercentage: mockState.concentrationPercentage
+  };
+
   return {
     totalValue,
     assets,
     attestationTimestamp: attestationTime,
-    attestationHash: `0x${Buffer.from(Date.now().toString()).toString('hex').substring(0, 64)}`,
+    attestationHash: `0x${sha256(hashInput).substring(0, 64)}`,
     source: 'mock-reserve-api'
   };
 }
