@@ -9,13 +9,13 @@
 | Milestone | Description | Status | Progress |
 |-----------|-------------|--------|----------|
 | **Milestone 1** | Core Infrastructure & Policy Engine | ✅ Complete | 100% |
-| **Milestone 2** | API Integration & Data Pipeline | ⚪ Not Started | 0% |
+| **Milestone 2** | API Integration & Data Pipeline | ✅ Complete | 100% |
 | **Milestone 3** | Chainlink CRE Integration | ⚪ Not Started | 0% |
-| **Milestone 4** | Privacy Layer & Security | ⚪ Not Started | 0% |
+| **Milestone 4** | Privacy Layer & Security | 🟡 In Progress | 50% |
 | **Milestone 5** | Dashboard & Monitoring UI | ⚪ Not Started | 0% |
-| **Milestone 6** | Testing, Docs & Deployment | ⚪ Not Started | 0% |
+| **Milestone 6** | Testing, Docs & Deployment | 🟡 In Progress | 40% |
 
-**Total Project Progress: ~20%**
+**Total Project Progress: ~55%**
 
 ---
 
@@ -51,16 +51,19 @@
 
 ## 🎯 Milestone 2: API Integration & Data Pipeline
 
-### Pending Tasks ⚪
+### Completed Tasks ✅
 
 | Task | Description | Status |
 |------|-------------|--------|
-| Reserve API Client | Confidential HTTP client for reserve data | ⚪ Pending |
-| Liability API Client | Confidential HTTP client for liability data | ⚪ Pending |
-| Data Transformation | Transform external API responses | ⚪ Pending |
-| Retry Logic | Exponential backoff for API failures | ⚪ Pending |
-| Rate Limiting | Respect API rate limits | ⚪ Pending |
-| Caching Layer | Cache responses with TTL | ⚪ Pending |
+| Reserve API Client | HTTP-adapter client with Zod validation | ✅ Done |
+| Liability API Client | HTTP-adapter client with Zod validation | ✅ Done |
+| Data Transformation | Normalize API responses via validation schemas | ✅ Done |
+| Retry Logic | Exponential backoff for API failures | ✅ Done |
+| Caching Layer | TTL-based in-memory cache per client | ✅ Done |
+| CRE HTTP Adapter | Node + Confidential stub (Feb 14 swap) | ✅ Done |
+| Workflow Runner | CLI entrypoint (npm run workflow) | ✅ Done |
+| Package Scripts | workflow, mock-api, demo:local | ✅ Done |
+| AI Reasoning Agent | Advisory explanation engine (graceful degradation) | ✅ Done |
 
 ---
 
@@ -80,13 +83,20 @@
 
 ## 🎯 Milestone 4: Privacy Layer & Security
 
+### Completed Tasks ✅
+
+| Task | Description | Status |
+|------|-------------|--------|
+| Data Classification | Sensitive vs. public data defined in types | ✅ Done |
+| Audit Logging | Hash-chained tamper-proof audit trail | ✅ Done |
+| Evidence Hashing | SHA-256 commitment without raw data exposure | ✅ Done |
+| Privacy Enforcement Tests | Verify no raw values in hashes/audit/reasoning | ✅ Done |
+
 ### Pending Tasks ⚪
 
 | Task | Description | Status |
 |------|-------------|--------|
-| Data Classification | Define sensitive vs. public data | ⚪ Pending |
-| Secret Management | Secure credential storage | ⚪ Pending |
-| Audit Logging | Tamper-proof audit logs | ⚪ Pending |
+| Secret Management | CRE-sealed credential storage (Feb 14) | ⚪ Pending |
 | Access Control | Role-based permissions | ⚪ Pending |
 
 ---
@@ -106,11 +116,20 @@
 
 ## 🎯 Milestone 6: Testing, Docs & Deployment
 
+### Completed Tasks ✅
+
+| Task | Description | Status |
+|------|-------------|--------|
+| Unit Tests | Core engine (10 tests) | ✅ Done |
+| AI Reasoning Tests | Reasoning agent (7 tests) | ✅ Done |
+| Audit Logger Tests | Chain integrity (6 tests) | ✅ Done |
+| Determinism Tests | 100-run + transition verification (5 tests) | ✅ Done |
+| Integration Tests | Full pipeline + failure modes + privacy (10 tests) | ✅ Done |
+
 ### Pending Tasks ⚪
 
 | Task | Description | Status |
 |------|-------------|--------|
-| Integration Tests | End-to-end testing | ⚪ Pending |
 | Load Testing | Performance benchmarks | ⚪ Pending |
 | API Documentation | OpenAPI/Swagger docs | ⚪ Pending |
 | User Guide | Deployment & usage guide | ⚪ Pending |
@@ -125,15 +144,23 @@
 | 2026-02-07 | Initial project setup, core policy engine, 4 compliance rules implemented |
 | 2026-02-07 | Mock API server and demo script created |
 | 2026-02-07 | Unit tests passing (10/10) |
+| 2026-02-08 | Milestone 1 complete (validation, config, errors) |
+| 2026-02-10 | CRE HTTP adapter, workflow runner, package scripts |
+| 2026-02-10 | API clients with retries, caching, Zod validation |
+| 2026-02-10 | Mock server: deterministic hash, neutral wording |
+| 2026-02-11 | AI Reasoning Agent with graceful degradation |
+| 2026-02-11 | Tamper-proof hash-chained audit logger |
+| 2026-02-11 | 38 tests: engine, AI, audit, determinism, integration, privacy |
 
 ---
 
 ## 🔗 Quick Links
 
 - [README](./README.md) - Project overview and documentation
-- [Demo](./src/demo.ts) - Run `npm run demo` to see the engine in action
-- [Tests](./tests/) - Run `npm test` to verify functionality
+- [Workflow](./src/cre/run.ts) - Run `npm run workflow` for CRE simulation
+- [Demo](./src/demo.ts) - Run `npm run demo` for scenario coverage
+- [Tests](./tests/) - Run `npm test` to verify (38 tests)
 
 ---
 
-*Last updated: February 7, 2026*
+*Last updated: February 11 2026*
