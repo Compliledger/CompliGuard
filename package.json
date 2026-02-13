@@ -43,9 +43,11 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@chainlink/cre-sdk": "^1.0.9",
     "crypto-js": "^4.2.0",
     "dotenv": "^16.4.1",
     "express": "^4.18.2",
+    "viem": "^2.45.3",
     "zod": "^3.22.4"
   },
   "engines": {

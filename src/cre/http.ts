@@ -2,12 +2,18 @@
  * CRE HTTP Adapter
  *
  * Provides an interface that can be swapped between:
- * - NodeHttpClient (local simulation)
- * - CreConfidentialHttpClient (Feb 14, privacy track)
+ * - NodeHttpClient       → local dev/demo (async Node.js fetch)
+ * - CreConfidentialHttpBridge → local CRE simulation (same behaviour, documents CRE path)
+ *
+ * For real CRE deployment, see cre-workflow/main.ts which uses:
+ * - HTTPClient              → standard CRE HTTP with DON consensus
+ * - ConfidentialHTTPClient  → seals credentials inside the DON
+ *
+ * @see cre-workflow/main.ts
  */
 
 import { ApiResponse } from '../core';
-import { ConfidentialHttpStub } from './confidential-http';
+import { CreConfidentialHttpBridge } from './confidential-http';
 
 export interface HttpClient {
   fetch<T>(endpoint: string): Promise<ApiResponse<T>>;
@@ -44,15 +50,20 @@ export class NodeHttpClient implements HttpClient {
 }
 
 /**
- * Placeholder Confidential HTTP client for CRE privacy track.
- * Will be implemented with CRE Confidential HTTP on Feb 14.
+ * CRE Confidential HTTP client bridge.
+ *
+ * In local mode, delegates to CreConfidentialHttpBridge (standard fetch).
+ * In CRE deployment, the cre-workflow/main.ts uses the real SDK ConfidentialHTTPClient.
  */
 export class CreConfidentialHttpClient implements HttpClient {
-  constructor(private readonly baseUrl: string, private readonly apiKey: string) {}
+  private bridge: CreConfidentialHttpBridge;
 
-  async fetch<T>(_endpoint: string): Promise<ApiResponse<T>> {
-    const stub = new ConfidentialHttpStub(this.baseUrl, this.apiKey);
-    return stub.fetch<T>(_endpoint);
+  constructor(private readonly baseUrl: string, private readonly apiKey: string) {
+    this.bridge = new CreConfidentialHttpBridge(baseUrl, apiKey);
+  }
+
+  async fetch<T>(endpoint: string): Promise<ApiResponse<T>> {
+    return this.bridge.fetch<T>(endpoint);
   }
 }
 

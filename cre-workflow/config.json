@@ -1,0 +1,6 @@
+{
+  "schedule": "0 */5 * * * *",
+  "reserveApiUrl": "http://localhost:3001",
+  "liabilityApiUrl": "http://localhost:3001",
+  "reportContractAddress": ""
+}

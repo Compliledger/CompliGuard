@@ -10,12 +10,12 @@
 |-----------|-------------|--------|----------|
 | **Milestone 1** | Core Infrastructure & Policy Engine | ✅ Complete | 100% |
 | **Milestone 2** | API Integration & Data Pipeline | ✅ Complete | 100% |
-| **Milestone 3** | Chainlink CRE Integration | ⚪ Not Started | 0% |
-| **Milestone 4** | Privacy Layer & Security | 🟡 In Progress | 50% |
+| **Milestone 3** | Chainlink CRE Integration | 🟡 In Progress | 75% |
+| **Milestone 4** | Privacy Layer & Security | 🟡 In Progress | 75% |
 | **Milestone 5** | Dashboard & Monitoring UI | ⚪ Not Started | 0% |
-| **Milestone 6** | Testing, Docs & Deployment | 🟡 In Progress | 40% |
+| **Milestone 6** | Testing, Docs & Deployment | 🟡 In Progress | 50% |
 
-**Total Project Progress: ~55%**
+**Total Project Progress: ~70%**
 
 ---
 
@@ -69,15 +69,26 @@
 
 ## 🎯 Milestone 3: Chainlink CRE Integration
 
+### Completed Tasks ✅
+
+| Task | Description | Status |
+|------|-------------|--------|
+| CRE SDK Integration | `@chainlink/cre-sdk` installed and integrated | ✅ Done |
+| CRE Workflow (main.ts) | Real CRE workflow with `Runner`, `CronCapability`, `handler` | ✅ Done |
+| HTTPClient Integration | Standard GET via `sendRequest` + DON consensus | ✅ Done |
+| ConfidentialHTTPClient | Privacy track using `ConfidentialHTTPClient` from SDK | ✅ Done |
+| Secrets Management | `runtime.getSecret()` + `secrets.yaml` declaration | ✅ Done |
+| CRE Config | `config.json` + `.env.example` for simulation | ✅ Done |
+| Confidential HTTP Bridge | `src/cre/` bridge from stub to real SDK | ✅ Done |
+| Scheduled Execution | Cron-based trigger via `CronCapability` | ✅ Done |
+
 ### Pending Tasks ⚪
 
 | Task | Description | Status |
 |------|-------------|--------|
-| CRE SDK Integration | Connect to Chainlink CRE | ⚪ Pending |
-| Workflow Deployment | Deploy workflow to CRE | ⚪ Pending |
-| Confidential HTTP | Implement secure data fetching | ⚪ Pending |
-| Scheduled Execution | Set up periodic evaluation | ⚪ Pending |
-| On-chain Reporting | Submit results to blockchain | ⚪ Pending |
+| CRE CLI Install | Install CLI + `cre auth login` | ⚪ Pending |
+| Workflow Simulation | `cre workflow simulate` end-to-end | ⚪ Pending |
+| On-chain Reporting | `runtime.report()` + `EVMClient.writeReport()` with ABI encoding | ✅ Done |
 
 ---
 
@@ -92,11 +103,16 @@
 | Evidence Hashing | SHA-256 commitment without raw data exposure | ✅ Done |
 | Privacy Enforcement Tests | Verify no raw values in hashes/audit/reasoning | ✅ Done |
 
+### Completed Tasks (continued) ✅
+
+| Task | Description | Status |
+|------|-------------|--------|
+| Secret Management | CRE-sealed credentials via `runtime.getSecret()` | ✅ Done |
+
 ### Pending Tasks ⚪
 
 | Task | Description | Status |
 |------|-------------|--------|
-| Secret Management | CRE-sealed credential storage (Feb 14) | ⚪ Pending |
 | Access Control | Role-based permissions | ⚪ Pending |
 
 ---
@@ -151,16 +167,22 @@
 | 2026-02-11 | AI Reasoning Agent with graceful degradation |
 | 2026-02-11 | Tamper-proof hash-chained audit logger |
 | 2026-02-11 | 38 tests: engine, AI, audit, determinism, integration, privacy |
+| 2026-02-13 | `@chainlink/cre-sdk` installed, real CRE workflow built |
+| 2026-02-13 | HTTPClient + ConfidentialHTTPClient + Secrets integrated |
+| 2026-02-13 | CRE config (config.json, secrets.yaml, .env.example) created |
+| 2026-02-13 | Confidential HTTP bridge: stub → real SDK bridge |
 
 ---
 
 ## 🔗 Quick Links
 
 - [README](./README.md) - Project overview and documentation
-- [Workflow](./src/cre/run.ts) - Run `npm run workflow` for CRE simulation
+- [CRE Workflow](./cre-workflow/main.ts) - Real CRE SDK workflow (HTTPClient + ConfidentialHTTPClient)
+- [CRE README](./cre-workflow/README.md) - CRE setup and simulation guide
+- [Local Workflow](./src/cre/run.ts) - Run `npm run workflow` for local simulation
 - [Demo](./src/demo.ts) - Run `npm run demo` for scenario coverage
 - [Tests](./tests/) - Run `npm test` to verify (38 tests)
 
 ---
 
-*Last updated: February 11 2026*
+*Last updated: February 13 2026*
