@@ -10,12 +10,12 @@
 |-----------|-------------|--------|----------|
 | **Milestone 1** | Core Infrastructure & Policy Engine | ✅ Complete | 100% |
 | **Milestone 2** | API Integration & Data Pipeline | ✅ Complete | 100% |
-| **Milestone 3** | Chainlink CRE Integration | 🟡 In Progress | 90% |
+| **Milestone 3** | Chainlink CRE Integration | ✅ Complete | 100% |
 | **Milestone 4** | Privacy Layer & Security | ✅ Complete | 100% |
 | **Milestone 5** | Dashboard & Monitoring UI | 🟡 In Progress | 25% |
 | **Milestone 6** | Testing, Docs & Deployment | 🟡 In Progress | 75% |
 
-**Total Project Progress: ~85%**
+**Total Project Progress: ~95%**
 
 ---
 
@@ -88,8 +88,8 @@
 |------|-------------|--------|
 | On-chain Reporting | `runtime.report()` + `EVMClient.writeReport()` with ABI encoding | ✅ Done |
 | Attestation Endpoint | `GET /attestation/latest` (plan.md M1 format) | ✅ Done |
-| CRE CLI Install | Install CLI + `cre auth login` | ⚪ Pending |
-| Workflow Simulation | `cre workflow simulate` end-to-end | ⚪ Pending |
+| CRE CLI Install | Install CLI v1.0.11 + `cre login` | ✅ Done |
+| Workflow Simulation | `cre workflow simulate compliance-monitor` | ✅ Done |
 
 ---
 
@@ -183,6 +183,9 @@
 | 2026-02-15 | CORS support + demo script (`scripts/demo.sh`) |
 | 2026-02-15 | README updated with explicit Chainlink file links (hackathon req) |
 | 2026-02-15 | Frontend developer guide written |
+| 2026-02-16 | CRE CLI v1.0.11 installed, logged in, project initialized |
+| 2026-02-16 | Bun v1.3.9 installed, workflow dependencies installed |
+| 2026-02-16 | **CRE workflow simulation SUCCESSFUL** (cron trigger, HTTP fetch, report) |
 
 ---
 
