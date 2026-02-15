@@ -6,17 +6,27 @@
  */
 
 import express, { Request, Response } from 'express';
+import cors from 'cors';
 import {
   ReserveData,
   LiabilityData,
   Asset,
   AssetRiskLevel,
-  ApiResponse
+  ApiResponse,
+  ComplianceStatus,
+  ComplianceResult
 } from '../core/types';
+import { ComplianceEngine, EvaluationInput } from '../core';
+import { AIReasoningAgent } from '../core/ai-reasoning';
 import { sha256 } from '../utils/hash';
 
 const app = express();
 app.use(express.json());
+app.use(cors());
+
+// Shared engine + AI agent for status endpoint
+const engine = new ComplianceEngine();
+const aiAgent = new AIReasoningAgent();
 
 // In-memory state for simulation
 let mockState = {
@@ -132,7 +142,142 @@ function generateLiabilityData(): LiabilityData {
   };
 }
 
-// API Routes
+// ─── Compliance evaluation history (for frontend) ────────────────────────────
+const complianceHistory: Array<{
+  timestamp: string;
+  status: ComplianceStatus;
+  evidenceHash: string;
+  policyVersion: string;
+  explanation: string;
+  controls: ComplianceResult['controls'];
+}> = [];
+
+// ─── API Routes ──────────────────────────────────────────────────────────────
+
+/**
+ * GET /attestation/latest
+ * Plan.md M1 format — unified attestation endpoint
+ */
+app.get('/attestation/latest', (req: Request, res: Response) => {
+  const reserves = generateReserveData();
+  const liabilities = generateLiabilityData();
+
+  const attestation = {
+    issuer: 'CompliGuard Mock Attestor',
+    attestationId: `att-${Date.now()}`,
+    lastAttestedAt: reserves.attestationTimestamp.getTime(),
+    reservesUsd: reserves.totalValue,
+    liabilitiesUsd: liabilities.totalValue,
+    composition: reserves.assets.map(a => ({
+      asset: a.symbol,
+      amountUsd: a.value,
+      risk: a.riskLevel
+    }))
+  };
+
+  res.json(attestation);
+});
+
+/**
+ * GET /api/compliance/status
+ * Returns the current compliance evaluation result.
+ * This is the primary endpoint consumed by the frontend dashboard.
+ */
+app.get('/api/compliance/status', (req: Request, res: Response) => {
+  try {
+    const reserves = generateReserveData();
+    const liabilities = generateLiabilityData();
+    const input: EvaluationInput = { reserves, liabilities };
+    const result = engine.evaluate(input);
+    const reasoning = aiAgent.generateReasoning(result);
+
+    const entry = {
+      timestamp: result.evaluationTimestamp.toISOString(),
+      status: result.overallStatus,
+      evidenceHash: result.evidenceHash,
+      policyVersion: result.policyVersion,
+      explanation: reasoning.summary,
+      controls: result.controls
+    };
+
+    // Keep last 50 entries
+    complianceHistory.unshift(entry);
+    if (complianceHistory.length > 50) complianceHistory.pop();
+
+    res.json({
+      success: true,
+      data: entry,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date()
+    });
+  }
+});
+
+/**
+ * GET /api/compliance/history
+ * Returns the last N compliance evaluations for the frontend timeline.
+ */
+app.get('/api/compliance/history', (req: Request, res: Response) => {
+  const limit = Math.min(Number(req.query.limit) || 20, 50);
+  res.json({
+    success: true,
+    data: complianceHistory.slice(0, limit),
+    timestamp: new Date()
+  });
+});
+
+/**
+ * POST /api/simulate/scenario
+ * Switch to a named demo scenario (for video recording).
+ */
+app.post('/api/simulate/scenario', (req: Request, res: Response) => {
+  const { scenario } = req.body;
+  const scenarios: Record<string, typeof mockState> = {
+    healthy: {
+      reserveMultiplier: 1.05,
+      attestationAgeHours: 2,
+      includeDisallowedAsset: false,
+      riskyAssetPercentage: 15,
+      concentrationPercentage: 50
+    },
+    at_risk: {
+      reserveMultiplier: 1.01,
+      attestationAgeHours: 10,
+      includeDisallowedAsset: false,
+      riskyAssetPercentage: 25,
+      concentrationPercentage: 78
+    },
+    non_compliant: {
+      reserveMultiplier: 0.95,
+      attestationAgeHours: 30,
+      includeDisallowedAsset: true,
+      riskyAssetPercentage: 40,
+      concentrationPercentage: 85
+    }
+  };
+
+  if (!scenario || !scenarios[scenario]) {
+    res.status(400).json({
+      success: false,
+      error: `Invalid scenario. Choose: ${Object.keys(scenarios).join(', ')}`,
+      timestamp: new Date()
+    });
+    return;
+  }
+
+  mockState = { ...scenarios[scenario] };
+  res.json({
+    success: true,
+    scenario,
+    state: mockState,
+    timestamp: new Date()
+  });
+});
 
 /**
  * GET /api/reserves
@@ -276,12 +421,16 @@ app.listen(PORT, () => {
   console.log(`🚀 Mock API Server running on http://localhost:${PORT}`);
   console.log('');
   console.log('Available endpoints:');
-  console.log(`  GET  /api/reserves     - Get reserve data (requires X-API-Key header)`);
-  console.log(`  GET  /api/liabilities  - Get liability data (requires X-API-Key header)`);
-  console.log(`  POST /api/simulate     - Update simulation parameters`);
-  console.log(`  GET  /api/simulate/state - Get current simulation state`);
-  console.log(`  POST /api/simulate/reset - Reset simulation to defaults`);
-  console.log(`  GET  /health           - Health check`);
+  console.log(`  GET  /attestation/latest     - Unified attestation (plan.md M1 format)`);
+  console.log(`  GET  /api/compliance/status   - Current compliance result (frontend)`);
+  console.log(`  GET  /api/compliance/history  - Compliance evaluation history (frontend)`);
+  console.log(`  GET  /api/reserves            - Get reserve data (requires X-API-Key)`);
+  console.log(`  GET  /api/liabilities         - Get liability data (requires X-API-Key)`);
+  console.log(`  POST /api/simulate            - Update simulation parameters`);
+  console.log(`  POST /api/simulate/scenario   - Switch to named scenario (healthy|at_risk|non_compliant)`);
+  console.log(`  GET  /api/simulate/state      - Get current simulation state`);
+  console.log(`  POST /api/simulate/reset      - Reset simulation to defaults`);
+  console.log(`  GET  /health                  - Health check`);
 });
 
 export { app };

@@ -130,33 +130,57 @@ npm run dev
 
 ---
 
-## 🔗 Chainlink Usage (Required)
+## 🔗 Chainlink CRE Files (Required for Submission)
 
-- `src/cre/workflow.ts` — CRE workflow definition and orchestration entrypoint
-- `(Feb 14) src/cre/confidential-http.ts` — Confidential HTTP integration (privacy track)
-- Additional Chainlink-related files will be added alongside CRE features
+| File | Purpose |
+|------|---------|
+| [`cre-workflow/main.ts`](./cre-workflow/main.ts) | **Primary CRE workflow** — `Runner`, `handler`, `CronCapability`, `HTTPClient`, `ConfidentialHTTPClient`, `EVMClient`, `runtime.report()` |
+| [`cre-workflow/config.json`](./cre-workflow/config.json) | Workflow configuration (schedule, API URLs, report contract address) |
+| [`cre-workflow/secrets.yaml`](./cre-workflow/secrets.yaml) | CRE Vault secret declarations (`RESERVE_API_KEY`, `LIABILITY_API_KEY`) |
+| [`cre-workflow/README.md`](./cre-workflow/README.md) | CRE setup, simulation, and deployment guide |
+| [`src/cre/workflow.ts`](./src/cre/workflow.ts) | Local CRE workflow executor (orchestrates engine + API clients) |
+| [`src/cre/http.ts`](./src/cre/http.ts) | HTTP adapter (Node ↔ CRE mode switching) |
+| [`src/cre/confidential-http.ts`](./src/cre/confidential-http.ts) | Confidential HTTP bridge (local fallback; CRE uses SDK directly) |
+| [`src/cre/run.ts`](./src/cre/run.ts) | Local workflow runner (`npm run workflow`) |
+| [`docs/privacy-boundary.md`](./docs/privacy-boundary.md) | Privacy boundary architecture and data classification |
 
 ---
 
 ## 🧪 Run with CRE (Simulation / Deployment)
 
 ```bash
-# Simulate the workflow (placeholder commands; align with CRE CLI)
-cre workflow simulate --workflow ./src/cre/workflow.ts
+# Simulate the CRE workflow via CLI
+cd cre-workflow
+cre workflow simulate --config config.json --secrets secrets.yaml main.ts
 
-# Deploy the workflow (placeholder commands; align with CRE CLI)
-cre workflow deploy --workflow ./src/cre/workflow.ts
+# Deploy to CRE network
+cre workflow deploy --config config.json --secrets secrets.yaml main.ts
 ```
 
-**Local workflow run (today):**
+**Local workflow run (without CRE CLI):**
 ```bash
 npm install
 
-# Terminal 1
+# Terminal 1 — Start mock API server
 npm run mock-server
 
-# Terminal 2
+# Terminal 2 — Run local workflow
 npm run workflow
+```
+
+**Demo scenarios (for video recording):**
+```bash
+# Switch to healthy (GREEN)
+curl -X POST http://localhost:3001/api/simulate/scenario -H 'Content-Type: application/json' -d '{"scenario":"healthy"}'
+
+# Switch to at-risk (YELLOW)
+curl -X POST http://localhost:3001/api/simulate/scenario -H 'Content-Type: application/json' -d '{"scenario":"at_risk"}'
+
+# Switch to non-compliant (RED)
+curl -X POST http://localhost:3001/api/simulate/scenario -H 'Content-Type: application/json' -d '{"scenario":"non_compliant"}'
+
+# Get current compliance status
+curl http://localhost:3001/api/compliance/status
 ```
 
 ### Running Tests
@@ -234,6 +258,8 @@ CompliGuard is **privacy-preserving by design**, using Chainlink CRE's Confident
 [Confidential HTTP Fetch] → [Offchain Policy Evaluation] → [Status + Evidence Emission]
 ```
 
+> See [Privacy Boundary Architecture](./docs/privacy-boundary.md) for the complete data flow diagram, classification matrix, and verification steps.
+
 ---
 
 ## 🔐 Regulatory Alignment
@@ -297,20 +323,38 @@ A typical demonstration (3–5 minutes):
 ## 📁 Project Structure
 
 ```
-compliGuard/
+CompliGuard/
+├── cre-workflow/              # Chainlink CRE workflow (production)
+│   ├── main.ts                # CRE SDK workflow (Runner, handler, ConfidentialHTTP)
+│   ├── config.json            # Workflow configuration
+│   ├── secrets.yaml           # CRE Vault secret declarations
+│   ├── .env.example           # Environment template
+│   └── README.md              # CRE setup guide
 ├── src/
-│   ├── core/              # Core policy engine
-│   │   ├── engine.ts      # Main compliance engine
-│   │   ├── rules/         # Compliance rule definitions
-│   │   └── types.ts       # Type definitions
-│   ├── api/               # Mock APIs for testing
-│   │   └── mock-server.ts # Reserve/liability mock server
-│   ├── cre/               # Chainlink CRE integration
-│   │   └── workflow.ts    # CRE workflow definitions
-│   └── utils/             # Utility functions
-├── tests/                 # Test suites
-├── docs/                  # Documentation
-└── config/                # Configuration files
+│   ├── core/                  # Core policy engine
+│   │   ├── engine.ts          # Deterministic compliance engine
+│   │   ├── ai-reasoning.ts    # AI reasoning agent (advisory only)
+│   │   ├── audit.ts           # Tamper-proof audit logger
+│   │   ├── validation.ts      # Zod schema validation
+│   │   ├── rules/             # 4 compliance rules
+│   │   │   ├── reserve-ratio.rule.ts
+│   │   │   ├── proof-freshness.rule.ts
+│   │   │   ├── asset-quality.rule.ts
+│   │   │   └── asset-concentration.rule.ts
+│   │   └── types.ts           # Type definitions
+│   ├── api/                   # API layer
+│   │   ├── mock-server.ts     # Mock API + compliance status endpoints
+│   │   └── clients.ts         # Reserve/liability API clients (retry, cache)
+│   ├── cre/                   # CRE integration (local mode)
+│   │   ├── workflow.ts        # Local CRE workflow executor
+│   │   ├── http.ts            # HTTP adapter (Node/CRE mode)
+│   │   ├── confidential-http.ts # Confidential HTTP bridge
+│   │   └── run.ts             # CLI runner
+│   └── utils/                 # Utilities (hash, logger)
+├── tests/                     # 38 tests (engine, AI, audit, determinism, integration)
+├── docs/
+│   └── privacy-boundary.md    # Privacy boundary architecture
+└── progress.md                # Milestone tracker
 ```
 
 ---

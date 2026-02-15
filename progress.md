@@ -10,12 +10,12 @@
 |-----------|-------------|--------|----------|
 | **Milestone 1** | Core Infrastructure & Policy Engine | ✅ Complete | 100% |
 | **Milestone 2** | API Integration & Data Pipeline | ✅ Complete | 100% |
-| **Milestone 3** | Chainlink CRE Integration | 🟡 In Progress | 75% |
-| **Milestone 4** | Privacy Layer & Security | 🟡 In Progress | 75% |
-| **Milestone 5** | Dashboard & Monitoring UI | ⚪ Not Started | 0% |
-| **Milestone 6** | Testing, Docs & Deployment | 🟡 In Progress | 50% |
+| **Milestone 3** | Chainlink CRE Integration | 🟡 In Progress | 90% |
+| **Milestone 4** | Privacy Layer & Security | ✅ Complete | 100% |
+| **Milestone 5** | Dashboard & Monitoring UI | 🟡 In Progress | 25% |
+| **Milestone 6** | Testing, Docs & Deployment | 🟡 In Progress | 75% |
 
-**Total Project Progress: ~70%**
+**Total Project Progress: ~85%**
 
 ---
 
@@ -86,9 +86,10 @@
 
 | Task | Description | Status |
 |------|-------------|--------|
+| On-chain Reporting | `runtime.report()` + `EVMClient.writeReport()` with ABI encoding | ✅ Done |
+| Attestation Endpoint | `GET /attestation/latest` (plan.md M1 format) | ✅ Done |
 | CRE CLI Install | Install CLI + `cre auth login` | ⚪ Pending |
 | Workflow Simulation | `cre workflow simulate` end-to-end | ⚪ Pending |
-| On-chain Reporting | `runtime.report()` + `EVMClient.writeReport()` with ABI encoding | ✅ Done |
 
 ---
 
@@ -108,25 +109,29 @@
 | Task | Description | Status |
 |------|-------------|--------|
 | Secret Management | CRE-sealed credentials via `runtime.getSecret()` | ✅ Done |
-
-### Pending Tasks ⚪
-
-| Task | Description | Status |
-|------|-------------|--------|
-| Access Control | Role-based permissions | ⚪ Pending |
+| Privacy Boundary Docs | Full data flow diagram + classification matrix | ✅ Done |
 
 ---
 
 ## 🎯 Milestone 5: Dashboard & Monitoring UI
 
+### Completed Tasks ✅
+
+| Task | Description | Status |
+|------|-------------|--------|
+| Status API | `GET /api/compliance/status` — frontend-ready endpoint | ✅ Done |
+| History API | `GET /api/compliance/history` — timeline endpoint | ✅ Done |
+| Scenario API | `POST /api/simulate/scenario` — demo presets | ✅ Done |
+| CORS Support | Cross-origin enabled for frontend | ✅ Done |
+| Frontend Dev Guide | API contract + component spec for frontend team | ✅ Done |
+
 ### Pending Tasks ⚪
 
 | Task | Description | Status |
 |------|-------------|--------|
-| React Dashboard | Web interface for monitoring | ⚪ Pending |
-| Real-time Status | Live compliance status display | ⚪ Pending |
-| Historical View | Past evaluations and trends | ⚪ Pending |
-| Alert System | Notifications for status changes | ⚪ Pending |
+| React Dashboard | Web interface for monitoring (read-only) | ⚪ Pending |
+| Real-time Polling | Auto-refresh compliance status | ⚪ Pending |
+| Alert System | Visual notifications for status changes | ⚪ Pending |
 
 ---
 
@@ -141,14 +146,15 @@
 | Audit Logger Tests | Chain integrity (6 tests) | ✅ Done |
 | Determinism Tests | 100-run + transition verification (5 tests) | ✅ Done |
 | Integration Tests | Full pipeline + failure modes + privacy (10 tests) | ✅ Done |
+| Privacy Boundary Docs | Data flow diagram + classification matrix | ✅ Done |
+| Demo Script | Interactive `scripts/demo.sh` for video recording | ✅ Done |
+| README (Chainlink links) | Explicit file links per hackathon requirement | ✅ Done |
 
 ### Pending Tasks ⚪
 
 | Task | Description | Status |
 |------|-------------|--------|
 | Load Testing | Performance benchmarks | ⚪ Pending |
-| API Documentation | OpenAPI/Swagger docs | ⚪ Pending |
-| User Guide | Deployment & usage guide | ⚪ Pending |
 | Docker Setup | Containerization | ⚪ Pending |
 
 ---
@@ -171,6 +177,12 @@
 | 2026-02-13 | HTTPClient + ConfidentialHTTPClient + Secrets integrated |
 | 2026-02-13 | CRE config (config.json, secrets.yaml, .env.example) created |
 | 2026-02-13 | Confidential HTTP bridge: stub → real SDK bridge |
+| 2026-02-15 | Privacy Boundary Architecture doc (`docs/privacy-boundary.md`) |
+| 2026-02-15 | `GET /attestation/latest` (plan.md M1 format) |
+| 2026-02-15 | Frontend APIs: `/api/compliance/status`, `/history`, `/simulate/scenario` |
+| 2026-02-15 | CORS support + demo script (`scripts/demo.sh`) |
+| 2026-02-15 | README updated with explicit Chainlink file links (hackathon req) |
+| 2026-02-15 | Frontend developer guide written |
 
 ---
 
@@ -179,10 +191,12 @@
 - [README](./README.md) - Project overview and documentation
 - [CRE Workflow](./cre-workflow/main.ts) - Real CRE SDK workflow (HTTPClient + ConfidentialHTTPClient)
 - [CRE README](./cre-workflow/README.md) - CRE setup and simulation guide
+- [Privacy Boundary](./docs/privacy-boundary.md) - Data flow, classification, and verification
+- [Demo Script](./scripts/demo.sh) - Run `bash scripts/demo.sh` for video recording
 - [Local Workflow](./src/cre/run.ts) - Run `npm run workflow` for local simulation
 - [Demo](./src/demo.ts) - Run `npm run demo` for scenario coverage
 - [Tests](./tests/) - Run `npm test` to verify (38 tests)
 
 ---
 
-*Last updated: February 13 2026*
+*Last updated: February 15 2026*
