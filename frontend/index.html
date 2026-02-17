@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="/src/assets/hero-image.jpg" as="image" type="image/jpeg" fetchpriority="high">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="/src/styles/print.css" media="print">
+    <title>Compli Guard</title>
+    <meta name="description" content="Compliance privacy tool build on ChainLink">
+    <meta name="author" content="CompliGuard" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CompliGuard - Privacy-Preserving Compliance">
+    <meta property="og:description" content="Privacy-preserving compliance enforcement powered by Chainlink CRE">
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CompliGuard - Privacy-Preserving Compliance">
+    <meta name="twitter:description" content="Privacy-preserving compliance enforcement powered by Chainlink CRE">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "CompliGuard",
+      "description": "Privacy-preserving compliance enforcement powered by Chainlink CRE",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web"
+    }
+    </script>
+</head>
+
+  <body>
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-primary text-primary-foreground px-4 py-2 rounded z-50">Skip to main content</a>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
