@@ -1,6 +1,8 @@
 {
   "schedule": "*/30 * * * * *",
   "url": "https://api.real-time-reserves.verinumus.io/v1/chainlink/proof-of-reserves/TrueUSD",
+  "compliGuardReceiver": "0xf9BaAE04C412c23BC750E79C84A19692708E71b9",
+  "chainId": 11155111,
   "evms": [
     {
       "tokenAddress": "0x4700A50d858Cb281847ca4Ee0938F80DEfB3F1dd",
