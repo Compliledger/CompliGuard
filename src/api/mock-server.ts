@@ -415,7 +415,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // Start server
-const PORT = process.env.MOCK_API_PORT || 3001;
+const PORT = process.env.PORT || process.env.MOCK_API_PORT || 3001;
 
 app.listen(PORT, () => {
   console.log(`🚀 Mock API Server running on http://localhost:${PORT}`);
