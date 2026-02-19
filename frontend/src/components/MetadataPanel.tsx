@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Copy, Check, Clock, FileText, Hash } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import TypewriterText from './TypewriterText';
 
 interface MetadataPanelProps {
   timestamp: string;
@@ -73,7 +74,9 @@ const MetadataPanel = ({ timestamp, policyVersion, evidenceHash }: MetadataPanel
 
       <MetadataCard icon={Hash} label="Evidence Hash" delay={0.2}>
         <div className="flex items-center gap-2">
-          <p className="text-xs text-foreground font-mono truncate flex-1">{evidenceHash.slice(0, 20)}...</p>
+          <p className="text-xs text-foreground font-mono truncate flex-1">
+            <TypewriterText text={`${evidenceHash.slice(0, 20)}...`} speed={25} cursor={false} />
+          </p>
           <motion.button
             whileTap={{ scale: 0.85 }}
             whileHover={{ scale: 1.1 }}
