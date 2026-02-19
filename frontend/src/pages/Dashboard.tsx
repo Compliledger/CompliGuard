@@ -9,6 +9,9 @@ import ScenarioControls from '@/components/ScenarioControls';
 import { OnChainVerification } from '@/components/OnChainVerification';
 import AuroraBackground from '@/components/AuroraBackground';
 import GradientText from '@/components/GradientText';
+import SimulationPanel from '@/components/SimulationPanel';
+import HashVerifier from '@/components/HashVerifier';
+import ComplianceHistory from '@/components/ComplianceHistory';
 import { fetchComplianceStatus } from '@/lib/api';
 import { ComplianceStatus } from '@/lib/types';
 import { Loader2, AlertTriangle, Brain, Activity } from 'lucide-react';
@@ -215,9 +218,24 @@ const Dashboard = () => {
               <OnChainVerification />
             </motion.div>
 
+            {/* Hash Verifier — interactive */}
+            <motion.div variants={fadeUp}>
+              <HashVerifier />
+            </motion.div>
+
+            {/* Custom Simulation Panel — interactive sliders */}
+            <motion.div variants={fadeUp}>
+              <SimulationPanel onUpdate={load} />
+            </motion.div>
+
             {/* Demo Scenario Controls */}
             <motion.div variants={fadeUp}>
               <ScenarioControls onScenarioChange={load} />
+            </motion.div>
+
+            {/* Compliance History Timeline */}
+            <motion.div variants={fadeUp}>
+              <ComplianceHistory />
             </motion.div>
           </motion.div>
         )}

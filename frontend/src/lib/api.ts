@@ -29,7 +29,6 @@ export async function fetchComplianceStatus(): Promise<ComplianceStatus> {
     }
     return result.data;
   } catch (err) {
-    // Fallback to mock data if API is unavailable
     console.warn('API unavailable, using mock data:', err);
     return { ...mockStatus, timestamp: new Date().toISOString() };
   }
@@ -64,5 +63,86 @@ export async function switchScenario(scenario: 'healthy' | 'at_risk' | 'non_comp
     }
   } catch (err) {
     console.warn('Scenario switch failed:', err);
+  }
+}
+
+// ─── NEW: Custom Simulation Parameters ──────────────────────────
+
+export interface SimulationState {
+  reserveMultiplier: number;
+  attestationAgeHours: number;
+  includeDisallowedAsset: boolean;
+  riskyAssetPercentage: number;
+  concentrationPercentage: number;
+}
+
+export async function getSimulationState(): Promise<SimulationState | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/simulate/state`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const result = await response.json();
+    return result.state || null;
+  } catch (err) {
+    console.warn('Get simulation state failed:', err);
+    return null;
+  }
+}
+
+export async function updateSimulation(params: Partial<SimulationState>): Promise<SimulationState | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/simulate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params),
+    });
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const result = await response.json();
+    return result.state || null;
+  } catch (err) {
+    console.warn('Update simulation failed:', err);
+    return null;
+  }
+}
+
+export async function resetSimulation(): Promise<void> {
+  try {
+    await fetch(`${API_BASE_URL}/api/simulate/reset`, { method: 'POST' });
+  } catch (err) {
+    console.warn('Reset simulation failed:', err);
+  }
+}
+
+// ─── NEW: On-Chain Hash Verification ────────────────────────────
+
+export interface VerifyResult {
+  evidenceHash: string;
+  existsOnChain: boolean;
+  contract: string;
+  verifyUrl: string;
+}
+
+export async function verifyEvidenceHash(hash: string): Promise<VerifyResult | null> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/onchain/verify/${encodeURIComponent(hash)}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const result = await response.json();
+    return result.data || null;
+  } catch (err) {
+    console.warn('Hash verification failed:', err);
+    return null;
+  }
+}
+
+// ─── NEW: On-Chain Reports List ─────────────────────────────────
+
+export async function fetchOnChainReports(limit = 10): Promise<any[]> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/onchain/reports?limit=${limit}`);
+    if (!response.ok) throw new Error(`API error: ${response.status}`);
+    const result = await response.json();
+    return result.data || [];
+  } catch (err) {
+    console.warn('On-chain reports fetch failed:', err);
+    return [];
   }
 }

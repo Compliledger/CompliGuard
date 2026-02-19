@@ -2,6 +2,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PrivacyIndicator from '@/components/PrivacyIndicator';
 import ScrollReveal, { StaggerContainer, StaggerItem } from '@/components/ScrollReveal';
+import LiquidBackground from '@/components/LiquidBackground';
+import TextPressure from '@/components/TextPressure';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Shield, Workflow, Scale, Brain, ArrowRight, Zap, Lock, FileCheck, Hash, Clock, BarChart3 } from 'lucide-react';
@@ -54,36 +56,46 @@ const Index = () => {
       <main id="main-content">
 
         {/* === HERO === */}
-        <section className="relative overflow-hidden">
-          {/* Background effects */}
-          <div className="absolute inset-0 dot-grid opacity-30 dark:opacity-[0.04]" />
-          <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/[0.02] rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+        <section className="relative overflow-hidden min-h-[90vh] flex flex-col justify-center">
+          {/* Liquid Ether WebGL Background */}
+          <LiquidBackground />
 
-          <div className="relative container-blog py-28 lg:py-40">
+          {/* Gradient overlays for readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-transparent to-background pointer-events-none z-[1]" />
+          <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
+
+          <div className="relative container-blog py-28 lg:py-40 z-[2]">
             <div className="max-w-3xl mx-auto text-center space-y-8">
               {/* Badge */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 border border-border/50 rounded-full px-4 py-1.5"
+                className="inline-flex items-center gap-2 border border-border/50 rounded-full px-4 py-1.5 bg-background/50 backdrop-blur-sm"
               >
                 <div className="h-1.5 w-1.5 rounded-full bg-compliance-green animate-pulse" />
                 <span className="text-xs font-medium text-muted-foreground tracking-wide">LIVE ON ETHEREUM SEPOLIA</span>
               </motion.div>
 
-              {/* Headline */}
-              <motion.h1
+              {/* TextPressure Headline */}
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
               >
-                <span className="text-foreground">Privacy-Preserving</span>
-                <br />
-                <span className="text-muted-foreground">Compliance Enforcement</span>
-              </motion.h1>
+                <h1 className="text-4xl md:text-5xl lg:text-6xl tracking-tight leading-[1.1]">
+                  <TextPressure
+                    text="CompliGuard"
+                    className="text-foreground"
+                    minWeight={200}
+                    maxWeight={900}
+                    radius={200}
+                  />
+                </h1>
+                <p className="text-2xl md:text-3xl font-light text-muted-foreground mt-3 tracking-tight">
+                  Privacy-Preserving Compliance
+                </p>
+              </motion.div>
 
               {/* Subheading */}
               <motion.p
