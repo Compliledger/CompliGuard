@@ -6,6 +6,7 @@ import MetadataPanel from '@/components/MetadataPanel';
 import PrivacyIndicator from '@/components/PrivacyIndicator';
 import ControlCard from '@/components/ControlCard';
 import ScenarioControls from '@/components/ScenarioControls';
+import { OnChainVerification } from '@/components/OnChainVerification';
 import { fetchComplianceStatus } from '@/lib/api';
 import { ComplianceStatus } from '@/lib/types';
 import { Loader2, AlertTriangle, Brain, Activity, Shield } from 'lucide-react';
@@ -149,6 +150,9 @@ const Dashboard = () => {
               policyVersion={data.policyVersion}
               evidenceHash={data.evidenceHash}
             />
+
+            {/* On-Chain Verification (REAL blockchain data) */}
+            <OnChainVerification />
 
             {/* Demo Scenario Controls */}
             <ScenarioControls onScenarioChange={load} />

@@ -409,28 +409,133 @@ app.post('/api/simulate/reset', (req: Request, res: Response) => {
 app.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'healthy',
-    service: 'mock-api-server',
+    service: 'compli-guard-api',
     timestamp: new Date()
   });
+});
+
+// ─── ON-CHAIN ENDPOINTS (REAL BLOCKCHAIN DATA) ──────────────────────────────
+
+import * as onchain from './onchain-reader';
+
+/**
+ * GET /api/onchain/summary
+ * Get on-chain contract summary with latest report
+ */
+app.get('/api/onchain/summary', async (req: Request, res: Response) => {
+  try {
+    const summary = await onchain.getOnChainSummary();
+    res.json({
+      success: true,
+      data: summary,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to read from blockchain',
+      timestamp: new Date()
+    });
+  }
+});
+
+/**
+ * GET /api/onchain/reports
+ * Get recent reports from on-chain (real blockchain data)
+ */
+app.get('/api/onchain/reports', async (req: Request, res: Response) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 10, 50);
+    const reports = await onchain.getRecentReports(limit);
+    res.json({
+      success: true,
+      data: reports,
+      count: reports.length,
+      contract: onchain.CONTRACT_INFO,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to read from blockchain',
+      timestamp: new Date()
+    });
+  }
+});
+
+/**
+ * GET /api/onchain/latest
+ * Get latest report from on-chain (real blockchain data)
+ */
+app.get('/api/onchain/latest', async (req: Request, res: Response) => {
+  try {
+    const report = await onchain.getLatestReport();
+    const count = await onchain.getReportCount();
+    res.json({
+      success: true,
+      data: report,
+      totalReports: count,
+      contract: onchain.CONTRACT_INFO,
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to read from blockchain',
+      timestamp: new Date()
+    });
+  }
+});
+
+/**
+ * GET /api/onchain/verify/:hash
+ * Verify if a specific evidence hash exists on-chain
+ */
+app.get('/api/onchain/verify/:hash', async (req: Request, res: Response) => {
+  try {
+    const { hash } = req.params;
+    const exists = await onchain.hasReport(hash);
+    res.json({
+      success: true,
+      data: {
+        evidenceHash: hash,
+        existsOnChain: exists,
+        contract: onchain.CONTRACT_INFO.address,
+        verifyUrl: `https://sepolia.etherscan.io/address/${onchain.CONTRACT_INFO.address}#readContract`
+      },
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to verify on blockchain',
+      timestamp: new Date()
+    });
+  }
 });
 
 // Start server
 const PORT = process.env.PORT || process.env.MOCK_API_PORT || 3001;
 
 app.listen(PORT, () => {
-  console.log(`🚀 Mock API Server running on http://localhost:${PORT}`);
+  console.log(`🚀 CompliGuard API Server running on http://localhost:${PORT}`);
   console.log('');
   console.log('Available endpoints:');
-  console.log(`  GET  /attestation/latest     - Unified attestation (plan.md M1 format)`);
-  console.log(`  GET  /api/compliance/status   - Current compliance result (frontend)`);
-  console.log(`  GET  /api/compliance/history  - Compliance evaluation history (frontend)`);
-  console.log(`  GET  /api/reserves            - Get reserve data (requires X-API-Key)`);
-  console.log(`  GET  /api/liabilities         - Get liability data (requires X-API-Key)`);
-  console.log(`  POST /api/simulate            - Update simulation parameters`);
-  console.log(`  POST /api/simulate/scenario   - Switch to named scenario (healthy|at_risk|non_compliant)`);
-  console.log(`  GET  /api/simulate/state      - Get current simulation state`);
-  console.log(`  POST /api/simulate/reset      - Reset simulation to defaults`);
+  console.log('  ─── Compliance Engine ───────────────────────────────────');
+  console.log(`  GET  /api/compliance/status   - Current compliance result`);
+  console.log(`  GET  /api/compliance/history  - Compliance evaluation history`);
+  console.log(`  POST /api/simulate/scenario   - Switch scenario (healthy|at_risk|non_compliant)`);
+  console.log('  ─── On-Chain (REAL Blockchain) ──────────────────────────');
+  console.log(`  GET  /api/onchain/summary     - Contract summary + latest report`);
+  console.log(`  GET  /api/onchain/latest      - Latest on-chain report`);
+  console.log(`  GET  /api/onchain/reports     - Recent on-chain reports`);
+  console.log(`  GET  /api/onchain/verify/:hash - Verify evidence hash exists`);
+  console.log('  ─── Data APIs ───────────────────────────────────────────');
+  console.log(`  GET  /api/reserves            - Reserve data (requires X-API-Key)`);
+  console.log(`  GET  /api/liabilities         - Liability data (requires X-API-Key)`);
   console.log(`  GET  /health                  - Health check`);
+  console.log('');
+  console.log(`📜 Contract: 0xf9BaAE04C412c23BC750E79C84A19692708E71b9 (Sepolia)`);
 });
 
 export { app };
