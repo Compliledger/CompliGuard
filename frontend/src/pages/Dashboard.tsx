@@ -63,10 +63,10 @@ const Dashboard = () => {
   }, [lastFetch]);
 
   const statusGradient = data?.status === 'RED'
-    ? 'from-red-500 via-orange-500 to-red-400'
+    ? 'from-red-400 via-neutral-400 to-red-400'
     : data?.status === 'YELLOW'
-    ? 'from-yellow-500 via-amber-500 to-orange-400'
-    : 'from-blue-500 via-cyan-500 to-emerald-500';
+    ? 'from-yellow-400 via-neutral-400 to-yellow-400'
+    : 'from-white via-neutral-500 to-white';
 
   return (
     <div className="min-h-screen bg-background relative">
