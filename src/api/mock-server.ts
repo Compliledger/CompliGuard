@@ -514,6 +514,71 @@ app.get('/api/onchain/verify/:hash', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * POST /api/run
+ * Single-button compliance check wrapper for judge demos.
+ * Runs evaluation with current simulation state, optionally anchors on-chain.
+ */
+app.post('/api/run', async (req: Request, res: Response) => {
+  try {
+    const { anchor = false } = req.body || {};
+
+    // 1. Evaluate compliance with current mock state
+    const reserves = generateReserveData();
+    const liabilities = generateLiabilityData();
+    const input: EvaluationInput = { reserves, liabilities };
+    const result = engine.evaluate(input);
+    const reasoning = aiAgent.generateReasoning(result);
+
+    // 2. Store in history
+    const entry = {
+      timestamp: result.evaluationTimestamp.toISOString(),
+      status: result.overallStatus,
+      evidenceHash: result.evidenceHash,
+      policyVersion: result.policyVersion,
+      explanation: reasoning.summary,
+      controls: result.controls
+    };
+    complianceHistory.unshift(entry);
+    if (complianceHistory.length > 50) complianceHistory.pop();
+
+    // 3. Optionally anchor on-chain (simulate with realistic hash)
+    let txHash: string | undefined;
+    if (anchor) {
+      // In production this would call a contract write; for demo we generate a realistic tx hash
+      txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+    }
+
+    // 4. Build response matching Maranda's spec
+    const reserveRatio = liabilities.totalValue > 0
+      ? reserves.totalValue / liabilities.totalValue
+      : 0;
+
+    res.json({
+      success: true,
+      data: {
+        status: result.overallStatus,
+        reserveRatio,
+        reserveValue: reserves.totalValue,
+        liabilityValue: liabilities.totalValue,
+        evidenceHash: result.evidenceHash,
+        policyVersion: result.policyVersion,
+        checkedAt: result.evaluationTimestamp.toISOString(),
+        txHash: txHash || undefined,
+        explanation: reasoning.summary,
+        controls: result.controls
+      },
+      timestamp: new Date()
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Run failed',
+      timestamp: new Date()
+    });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || process.env.MOCK_API_PORT || 3001;
 

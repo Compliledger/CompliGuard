@@ -1,20 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import StatusBadge from '@/components/StatusBadge';
 import MetadataPanel from '@/components/MetadataPanel';
 import PrivacyIndicator from '@/components/PrivacyIndicator';
 import ControlCard from '@/components/ControlCard';
-import ScenarioControls from '@/components/ScenarioControls';
 import { OnChainVerification } from '@/components/OnChainVerification';
 import AuroraBackground from '@/components/AuroraBackground';
 import GradientText from '@/components/GradientText';
-import SimulationPanel from '@/components/SimulationPanel';
+import DemoControls, { DemoPhase } from '@/components/DemoControls';
 import HashVerifier from '@/components/HashVerifier';
 import ComplianceHistory from '@/components/ComplianceHistory';
+import OnboardingModal from '@/components/OnboardingModal';
+import ReserveGauge from '@/components/ReserveGauge';
+import ReportDownload from '@/components/ReportDownload';
 import { fetchComplianceStatus } from '@/lib/api';
 import { ComplianceStatus } from '@/lib/types';
-import { Loader2, AlertTriangle, Brain, Activity } from 'lucide-react';
+import { Loader2, AlertTriangle, Brain, Activity, Play, CheckCircle, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const POLL_INTERVAL = 30000;
@@ -38,6 +40,18 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [lastFetch, setLastFetch] = useState(Date.now());
+  const [demoPhase, setDemoPhase] = useState<DemoPhase>('idle');
+  const [demoDetail, setDemoDetail] = useState<string>('');
+  const demoRef = useRef<HTMLDivElement>(null);
+
+  const scrollToDemo = () => {
+    demoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handlePhaseChange = (phase: DemoPhase, detail?: string) => {
+    setDemoPhase(phase);
+    setDemoDetail(detail || '');
+  };
 
   const load = useCallback(async () => {
     try {
@@ -66,10 +80,10 @@ const Dashboard = () => {
   }, [lastFetch]);
 
   const statusGradient = data?.status === 'RED'
-    ? 'from-red-400 via-neutral-400 to-red-400'
+    ? 'from-red-400 via-blue-400 to-red-400'
     : data?.status === 'YELLOW'
-    ? 'from-yellow-400 via-neutral-400 to-yellow-400'
-    : 'from-white via-neutral-500 to-white';
+    ? 'from-yellow-400 via-blue-400 to-yellow-400'
+    : 'from-blue-400 via-cyan-300 to-blue-400';
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -97,6 +111,20 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Download Report */}
+            {data && <ReportDownload data={data} />}
+
+            {/* START DEMO button */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={scrollToDemo}
+              className="flex items-center gap-2 bg-primary text-primary-foreground rounded-xl px-5 py-2 text-xs font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow"
+            >
+              <Play className="h-3.5 w-3.5" />
+              Start Demo
+            </motion.button>
+
             {/* Live indicator */}
             <motion.div
               className="flex items-center gap-2 bg-secondary/80 backdrop-blur-sm border border-border/50 rounded-xl px-4 py-2"
@@ -121,6 +149,53 @@ const Dashboard = () => {
             </motion.div>
           </div>
         </motion.div>
+
+        {/* Demo status line */}
+        <AnimatePresence mode="wait">
+          {demoPhase !== 'idle' && (
+            <motion.div
+              key={demoPhase}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.3 }}
+              className={`flex items-center gap-3 rounded-xl px-5 py-3 text-sm font-medium ${
+                demoPhase === 'scenario_set'
+                  ? 'bg-primary/5 border border-primary/15 text-primary'
+                  : demoPhase === 'running'
+                  ? 'bg-compliance-yellow/5 border border-compliance-yellow/15 text-compliance-yellow'
+                  : demoPhase === 'anchored'
+                  ? 'bg-compliance-green/5 border border-compliance-green/15 text-compliance-green'
+                  : 'bg-primary/5 border border-primary/15 text-primary'
+              }`}
+            >
+              {demoPhase === 'scenario_set' && (
+                <>
+                  <Zap className="h-4 w-4 shrink-0" />
+                  <span>Scenario: <strong>{demoDetail}</strong> — Toggle anchor and click Run</span>
+                </>
+              )}
+              {demoPhase === 'running' && (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                  <span>Running compliance check…</span>
+                </>
+              )}
+              {demoPhase === 'done' && (
+                <>
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span>Evaluation complete — Status: <strong>{demoDetail}</strong></span>
+                </>
+              )}
+              {demoPhase === 'anchored' && (
+                <>
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span>Report anchored on Sepolia — Status: <strong>{demoDetail}</strong></span>
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Error banner */}
         <AnimatePresence>
@@ -168,9 +243,12 @@ const Dashboard = () => {
               <PrivacyIndicator compact />
             </motion.div>
 
-            {/* Status badge */}
-            <motion.div variants={fadeUp}>
-              <StatusBadge status={data.status} />
+            {/* Status badge + Reserve Gauge row */}
+            <motion.div variants={fadeUp} className="grid md:grid-cols-2 gap-6">
+              <div className="space-y-6">
+                <StatusBadge status={data.status} />
+              </div>
+              <ReserveGauge status={data.status} />
             </motion.div>
 
             {/* Controls Grid */}
@@ -218,19 +296,14 @@ const Dashboard = () => {
               <OnChainVerification />
             </motion.div>
 
+            {/* Demo Controls — unified judge-testable panel */}
+            <motion.div variants={fadeUp}>
+              <DemoControls ref={demoRef} onStatusUpdate={load} onPhaseChange={handlePhaseChange} />
+            </motion.div>
+
             {/* Hash Verifier — interactive */}
             <motion.div variants={fadeUp}>
               <HashVerifier />
-            </motion.div>
-
-            {/* Custom Simulation Panel — interactive sliders */}
-            <motion.div variants={fadeUp}>
-              <SimulationPanel onUpdate={load} />
-            </motion.div>
-
-            {/* Demo Scenario Controls */}
-            <motion.div variants={fadeUp}>
-              <ScenarioControls onScenarioChange={load} />
             </motion.div>
 
             {/* Compliance History Timeline */}
@@ -253,6 +326,9 @@ const Dashboard = () => {
       </main>
 
       <Footer />
+
+      {/* First-visit onboarding */}
+      <OnboardingModal onComplete={scrollToDemo} />
     </div>
   );
 };

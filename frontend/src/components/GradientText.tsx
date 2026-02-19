@@ -9,7 +9,7 @@ interface GradientTextProps {
 const GradientText = ({
   children,
   className = '',
-  gradient = 'from-white via-neutral-400 to-white',
+  gradient = 'from-blue-400 via-cyan-300 to-blue-400',
 }: GradientTextProps) => {
   const words = children.split(' ');
 

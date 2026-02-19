@@ -9,6 +9,7 @@ import { Suspense, lazy } from "react";
 import Index from "./pages/Index";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/how-it-works" element={<HowItWorks />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

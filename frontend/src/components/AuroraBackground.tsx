@@ -7,16 +7,16 @@ interface AuroraBackgroundProps {
 
 const statusGradients = {
   GREEN: {
-    colors: ['#22c55e', '#10b981', '#1a1a1a', '#111111'],
-    opacity: 0.08,
+    colors: ['#22c55e', '#10b981', '#3b82f6', '#0ea5e9'],
+    opacity: 0.12,
   },
   YELLOW: {
-    colors: ['#eab308', '#d97706', '#1a1a1a', '#111111'],
-    opacity: 0.06,
+    colors: ['#eab308', '#d97706', '#3b82f6', '#6366f1'],
+    opacity: 0.10,
   },
   RED: {
-    colors: ['#ef4444', '#dc2626', '#1a1a1a', '#111111'],
-    opacity: 0.07,
+    colors: ['#ef4444', '#dc2626', '#3b82f6', '#8b5cf6'],
+    opacity: 0.11,
   },
 };
 
