@@ -597,7 +597,12 @@ app.listen(PORT, () => {
   console.log('  ─── Compliance Engine ───────────────────────────────────');
   console.log(`  GET  /api/compliance/status   - Current compliance result`);
   console.log(`  GET  /api/compliance/history  - Compliance evaluation history`);
+  console.log(`  POST /api/run                 - Run compliance check (judge demo)`);
+  console.log('  ─── Simulation ──────────────────────────────────────────');
   console.log(`  POST /api/simulate/scenario   - Switch scenario (healthy|at_risk|non_compliant)`);
+  console.log(`  POST /api/simulate            - Update simulation parameters`);
+  console.log(`  GET  /api/simulate/state      - Get current simulation state`);
+  console.log(`  POST /api/simulate/reset      - Reset simulation to defaults`);
   console.log('  ─── On-Chain (REAL Blockchain) ──────────────────────────');
   console.log(`  GET  /api/onchain/summary     - Contract summary + latest report`);
   console.log(`  GET  /api/onchain/latest      - Latest on-chain report`);
