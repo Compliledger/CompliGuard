@@ -111,13 +111,17 @@ const ControlCard = ({ control, index }: ControlCardProps) => {
           <div className="flex items-baseline gap-2">
             <AnimatedCounter
               value={control.value}
-              decimals={control.controlType === 'RESERVE_RATIO' ? 2 : 0}
-              suffix={control.controlType === 'RESERVE_RATIO' ? '' : '%'}
+              decimals={control.controlType === 'RESERVE_RATIO' ? 3 : control.controlType === 'PROOF_FRESHNESS' ? 1 : 0}
+              suffix={control.controlType === 'RESERVE_RATIO' ? 'x' : control.controlType === 'PROOF_FRESHNESS' ? ' hrs' : '%'}
               className={`text-2xl font-bold ${colors.text} tabular-nums`}
               duration={1.2}
             />
             <span className="text-xs text-muted-foreground">
-              / {control.controlType === 'RESERVE_RATIO' ? control.threshold.toFixed(2) : `${control.threshold}%`}
+              {control.controlType === 'RESERVE_RATIO'
+                ? `/ ${control.threshold.toFixed(2)}x min`
+                : control.controlType === 'PROOF_FRESHNESS'
+                ? `/ ${control.threshold} hr max`
+                : `/ ${control.threshold}%`}
             </span>
           </div>
 

@@ -9,9 +9,12 @@ interface ReserveGaugeProps {
 }
 
 const ReserveGauge = ({ reserveValue, liabilityValue, ratio, status }: ReserveGaugeProps) => {
-  const displayRatio = ratio || (reserveValue && liabilityValue ? reserveValue / liabilityValue : 1.0);
-  const reserveM = reserveValue ? (reserveValue / 1_000_000).toFixed(0) : '105';
-  const liabilityM = liabilityValue ? (liabilityValue / 1_000_000).toFixed(0) : '100';
+  const displayRatio = ratio ?? (reserveValue && liabilityValue ? reserveValue / liabilityValue : 1.0);
+  const baseReserve = reserveValue ?? (liabilityValue ? liabilityValue * displayRatio : 100_000_000 * displayRatio);
+  const baseLiability = liabilityValue ?? (reserveValue ? reserveValue / displayRatio : 100_000_000);
+  const reserveM = (baseReserve / 1_000_000).toFixed(0);
+  const liabilityM = (baseLiability / 1_000_000).toFixed(0);
+  const liabilityBarPct = Math.min((baseLiability / baseReserve) * 100, 100);
 
   const ratioPercent = Math.min(Math.max(displayRatio * 100, 80), 130);
   const barWidth = Math.min(((ratioPercent - 80) / 50) * 100, 100);
@@ -109,7 +112,7 @@ const ReserveGauge = ({ reserveValue, liabilityValue, ratio, status }: ReserveGa
           <div className="h-2 bg-secondary rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
-              animate={{ width: `${liabilityValue && reserveValue ? (liabilityValue / reserveValue) * 100 : 95}%` }}
+              animate={{ width: `${liabilityBarPct}%` }}
               transition={{ duration: 0.8, delay: 0.7 }}
               className="h-full bg-muted-foreground/30 rounded-full"
             />

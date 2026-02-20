@@ -248,7 +248,10 @@ const Dashboard = () => {
               <div className="space-y-6">
                 <StatusBadge status={data.status} />
               </div>
-              <ReserveGauge status={data.status} />
+              <ReserveGauge
+                status={data.status}
+                ratio={data.controls?.find(c => c.controlType === 'RESERVE_RATIO')?.value}
+              />
             </motion.div>
 
             {/* Controls Grid */}
