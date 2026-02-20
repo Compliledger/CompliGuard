@@ -161,8 +161,8 @@ cre workflow deploy --config config.json --secrets secrets.yaml main.ts
 ```bash
 npm install
 
-# Terminal 1 — Start mock API server
-npm run mock-server
+# Terminal 1 — Start API server
+npm run server
 
 # Terminal 2 — Run local workflow
 npm run workflow
@@ -343,7 +343,7 @@ CompliGuard/
 │   │   │   └── asset-concentration.rule.ts
 │   │   └── types.ts           # Type definitions
 │   ├── api/                   # API layer
-│   │   ├── mock-server.ts     # Mock API + compliance status endpoints
+│   │   ├── server.ts          # API server + compliance status endpoints
 │   │   └── clients.ts         # Reserve/liability API clients (retry, cache)
 │   ├── cre/                   # CRE integration (local mode)
 │   │   ├── workflow.ts        # Local CRE workflow executor

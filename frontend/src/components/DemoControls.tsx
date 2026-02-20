@@ -85,6 +85,13 @@ const DemoControls = forwardRef<HTMLDivElement, DemoControlsProps>(({ onStatusUp
           ? `Transaction submitted to Sepolia. Ratio: ${result.reserveRatio.toFixed(3)}x`
           : `Reserve ratio: ${result.reserveRatio.toFixed(3)}x | ${result.policyVersion}`,
       });
+    } else {
+      onPhaseChange?.('idle');
+      toast({
+        title: 'Compliance check failed',
+        description: 'Could not reach the API server. Make sure the backend is running.',
+        variant: 'destructive',
+      });
     }
     onStatusUpdate?.();
   }, [anchor, toast, onStatusUpdate]);
@@ -347,12 +354,15 @@ const DemoControls = forwardRef<HTMLDivElement, DemoControlsProps>(({ onStatusUp
                       <p className="text-[10px] text-muted-foreground">Transaction submitted to Sepolia testnet</p>
                     </div>
                     <a
-                      href={`https://sepolia.etherscan.io/tx/${runResult.txHash}`}
+                      href={runResult.realTx
+                        ? `https://sepolia.etherscan.io/tx/${runResult.txHash}`
+                        : 'https://sepolia.etherscan.io/address/0xf9BaAE04C412c23BC750E79C84A19692708E71b9'
+                      }
                       target="_blank"
                       rel="noopener noreferrer"
                       className="shrink-0 flex items-center gap-1.5 bg-compliance-green/20 hover:bg-compliance-green/30 text-compliance-green text-[10px] font-bold rounded-lg px-3 py-1.5 transition-colors"
                     >
-                      View TX <ExternalLink className="h-3 w-3" />
+                      {runResult.realTx ? 'View TX' : 'View Contract'} <ExternalLink className="h-3 w-3" />
                     </a>
                   </motion.div>
 
@@ -367,10 +377,14 @@ const DemoControls = forwardRef<HTMLDivElement, DemoControlsProps>(({ onStatusUp
                         {copiedField === 'tx' ? <Check className="h-3 w-3 text-compliance-green" /> : <Copy className="h-3 w-3 text-muted-foreground" />}
                       </button>
                       <a
-                        href={`https://sepolia.etherscan.io/tx/${runResult.txHash}`}
+                        href={runResult.realTx
+                          ? `https://sepolia.etherscan.io/tx/${runResult.txHash}`
+                          : 'https://sepolia.etherscan.io/address/0xf9BaAE04C412c23BC750E79C84A19692708E71b9'
+                        }
                         target="_blank"
                         rel="noopener noreferrer"
                         className="h-7 w-7 flex items-center justify-center rounded-lg bg-secondary hover:bg-accent transition-colors"
+                        title={runResult.realTx ? 'View transaction on Etherscan' : 'View contract on Etherscan'}
                       >
                         <ExternalLink className="h-3 w-3 text-muted-foreground" />
                       </a>

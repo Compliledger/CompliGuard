@@ -302,7 +302,7 @@ npm run dev
 
 # Backend must be running on port 3001:
 # (in separate terminal, from repo root)
-npm run mock-server
+npm run server
 ```
 
 ---

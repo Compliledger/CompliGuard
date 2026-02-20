@@ -54,7 +54,7 @@ async function main(): Promise<void> {
   });
 
   logger.info('Quickstart:', {});
-  logger.info('  Terminal 1: npm run mock-server');
+  logger.info('  Terminal 1: npm run server');
   logger.info('  Terminal 2: npm run workflow');
   logger.info('Optional: npm run demo (scenario coverage)');
 }

@@ -5,7 +5,8 @@
  * This provides REAL blockchain verification of compliance status.
  */
 
-import { createPublicClient, http } from 'viem';
+import { createPublicClient, createWalletClient, http } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 import { sepolia } from 'viem/chains';
 
 // Contract configuration
@@ -240,6 +241,64 @@ export async function getOnChainSummary(): Promise<OnChainSummary> {
     latestReport,
     explorerUrl: `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`
   };
+}
+
+/**
+ * Status string to uint8 mapping for contract calls
+ */
+const STATUS_CODES: Record<string, number> = { GREEN: 0, YELLOW: 1, RED: 2 };
+
+/**
+ * Submit a compliance report ON-CHAIN (real Sepolia transaction).
+ * Requires SIGNER_PRIVATE_KEY env var with a funded Sepolia wallet.
+ * Returns the transaction hash, or null if no key is configured.
+ */
+export async function submitReport(
+  status: 'GREEN' | 'YELLOW' | 'RED',
+  evidenceHash: string,
+  policyVersion: string,
+  timestamp: Date,
+  controlCount: number
+): Promise<string | null> {
+  const pk = process.env.SIGNER_PRIVATE_KEY;
+  if (!pk) {
+    console.warn('SIGNER_PRIVATE_KEY not set — skipping on-chain write');
+    return null;
+  }
+
+  try {
+    const account = privateKeyToAccount(pk as `0x${string}`);
+    const walletClient = createWalletClient({
+      account,
+      chain: sepolia,
+      transport: http(RPC_URL)
+    });
+
+    const hashHex = evidenceHash.startsWith('0x') ? evidenceHash : `0x${evidenceHash}`;
+    // Pad to bytes32 if needed
+    const bytes32Hash = hashHex.length < 66
+      ? (hashHex + '0'.repeat(66 - hashHex.length)) as `0x${string}`
+      : hashHex as `0x${string}`;
+
+    const txHash = await walletClient.writeContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'receiveReport',
+      args: [
+        STATUS_CODES[status] ?? 0,
+        bytes32Hash,
+        policyVersion,
+        BigInt(Math.floor(timestamp.getTime() / 1000)),
+        controlCount
+      ]
+    });
+
+    console.log(`✅ Report anchored on Sepolia: ${txHash}`);
+    return txHash;
+  } catch (error) {
+    console.error('❌ On-chain write failed:', error instanceof Error ? error.message : error);
+    return null;
+  }
 }
 
 // Export contract info for reference

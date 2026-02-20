@@ -8,7 +8,7 @@ import { ComplianceEngine, ComplianceStatus, AssetRiskLevel, ReserveData, Liabil
 
 const engine = new ComplianceEngine();
 
-function createMockData(scenario: string): { reserves: ReserveData; liabilities: LiabilityData } {
+function createScenarioData(scenario: string): { reserves: ReserveData; liabilities: LiabilityData } {
   const baseReserves = 100_000_000;
   const baseLiabilities = 100_000_000;
 
@@ -158,7 +158,7 @@ function runDemo(): void {
     console.log(scenario.title);
     console.log('───────────────────────────────────────────────────────────────');
     
-    const data = createMockData(scenario.name);
+    const data = createScenarioData(scenario.name);
     const result = engine.evaluate(data);
 
     console.log('\n' + result.explanation);

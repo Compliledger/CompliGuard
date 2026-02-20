@@ -50,7 +50,7 @@ In the Railway dashboard, go to **Settings** → **Build**:
 |---------|-------|
 | Root Directory | `/` (root) |
 | Build Command | `npm install && npm run build` |
-| Start Command | `npm run mock-server` |
+| Start Command | `npm run server` |
 
 ### Step 4: Set Environment Variables
 
@@ -138,7 +138,7 @@ For more control, add these files to your repo root:
 builder = "nixpacks"
 
 [deploy]
-startCommand = "npm run mock-server"
+startCommand = "npm run server"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
@@ -148,7 +148,7 @@ restartPolicyMaxRetries = 5
 ### `Procfile` (alternative)
 
 ```
-web: npm run mock-server
+web: npm run server
 ```
 
 ---
@@ -174,7 +174,7 @@ Add to `frontend/vercel.json`:
 
 The backend already has CORS enabled for all origins. For production, you may want to restrict it:
 
-Edit `src/api/mock-server.ts`:
+Edit `src/api/server.ts`:
 
 ```typescript
 app.use(cors({
@@ -208,7 +208,7 @@ app.use(cors({
 
 ```bash
 # Terminal 1: Backend
-npm run mock-server
+npm run server
 
 # Terminal 2: Frontend
 cd frontend && npm run dev
@@ -219,7 +219,7 @@ cd frontend && npm run dev
 ```bash
 # Backend
 npm run build
-npm run mock-server
+npm run server
 
 # Frontend
 cd frontend

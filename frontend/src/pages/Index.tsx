@@ -1,11 +1,15 @@
+import { useRef, lazy, Suspense } from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PrivacyIndicator from '@/components/PrivacyIndicator';
 import ScrollReveal, { StaggerContainer, StaggerItem } from '@/components/ScrollReveal';
+import OrbitingIcons from '@/components/OrbitingIcons';
+import AnimatedBorder from '@/components/AnimatedBorder';
+const PixelBlast = lazy(() => import('@/components/PixelBlast'));
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Shield, Workflow, Scale, Brain, ArrowRight, Zap, Eye, Lock, AlertTriangle, CheckCircle, X, Clock, FileCheck, DollarSign } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 
 const steps = [
   {
@@ -49,101 +53,148 @@ const comparisonRows = [
 ];
 
 const Index = () => {
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.95]);
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <main id="main-content">
 
         {/* === HERO === */}
-        <section className="relative overflow-hidden">
-          {/* Background effects */}
-          <div className="absolute inset-0 dot-grid opacity-30 dark:opacity-10" />
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent pointer-events-none" />
+        <section ref={heroRef} className="relative overflow-hidden min-h-[100vh] flex items-center">
+          {/* PixelBlast background */}
+          <Suspense fallback={null}>
+            <PixelBlast
+              color="#0061ff"
+              pixelSize={3}
+              patternScale={2}
+              patternDensity={1}
+              speed={0.5}
+              enableRipples={true}
+              rippleSpeed={0.3}
+              rippleThickness={0.1}
+              edgeFade={0.4}
+              variant="square"
+            />
+          </Suspense>
 
-          <div className="relative container-blog py-24 lg:py-36">
-            <div className="max-w-3xl mx-auto text-center space-y-8">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-                className="inline-flex items-center gap-2 bg-primary/5 border border-primary/15 rounded-full px-4 py-1.5"
-              >
-                <div className="h-1.5 w-1.5 rounded-full bg-compliance-green animate-pulse" />
-                <span className="text-xs font-semibold text-primary tracking-wide">LIVE ON CHAINLINK CRE</span>
-              </motion.div>
+          <motion.div
+            style={{ opacity: heroOpacity, scale: heroScale, y: heroY }}
+            className="relative w-full z-[3]"
+          >
+            <div className="mx-auto max-w-7xl px-6 lg:px-8 py-20 lg:py-28">
+              <div className="grid lg:grid-cols-[1fr,auto] gap-16 lg:gap-20 items-center">
+                {/* Left — Text content (glassmorphism card) */}
+                <div className="space-y-7 max-w-2xl bg-background/5 backdrop-blur-xl border border-white/[0.08] rounded-3xl p-8 sm:p-10 shadow-[0_8px_60px_-12px_rgba(0,0,0,0.4)]">
+                  {/* Badge */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                  >
+                    <AnimatedBorder>
+                      <div className="flex items-center gap-2.5 px-4 py-1.5">
+                        <div className="relative h-2 w-2">
+                          <div className="absolute inset-0 rounded-full bg-compliance-green animate-ping opacity-75" />
+                          <div className="relative rounded-full h-2 w-2 bg-compliance-green" />
+                        </div>
+                        <span className="text-[11px] font-semibold text-primary tracking-widest">LIVE ON CHAINLINK CRE</span>
+                      </div>
+                    </AnimatedBorder>
+                  </motion.div>
 
-              {/* Shield icon */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className="relative inline-block"
-              >
-                <Shield className="h-16 w-16 mx-auto text-primary" strokeWidth={1.2} />
-                <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-              </motion.div>
+                  {/* Headline */}
+                  <div>
+                    <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-[4rem] font-bold tracking-tight leading-[1.08]">
+                      <motion.span
+                        className="gradient-text block"
+                        initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        Privacy-Preserving
+                      </motion.span>
+                      <motion.span
+                        className="text-foreground block"
+                        initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                        transition={{ duration: 0.7, delay: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        Compliance Enforcement
+                      </motion.span>
+                    </h1>
+                  </div>
 
-              {/* Headline */}
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-[1.1]"
-              >
-                <span className="gradient-text">Privacy-Preserving</span>
-                <br />
-                <span className="text-foreground">Compliance Enforcement</span>
-              </motion.h1>
+                  {/* Subheading — blur-in */}
+                  <motion.p
+                    initial={{ opacity: 0, filter: 'blur(8px)' }}
+                    animate={{ opacity: 1, filter: 'blur(0px)' }}
+                    transition={{ duration: 0.7, delay: 1.2 }}
+                    className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-lg"
+                  >
+                    Real-time regulatory oversight without exposing sensitive financial data.
+                    Powered by Chainlink CRE with deterministic rules, AI reasoning, and on-chain anchoring.
+                  </motion.p>
 
-              {/* Subheading */}
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.45 }}
-                className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-xl mx-auto"
-              >
-                Real-time regulatory oversight without exposing sensitive financial data.
-              </motion.p>
+                  {/* CTA buttons */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.5 }}
+                    className="flex flex-wrap gap-4 pt-1"
+                  >
+                    <Button size="lg" asChild className="group rounded-xl h-12 px-8 text-sm font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/35 transition-all duration-300 hover:scale-[1.02]">
+                      <Link to="/dashboard">
+                        View Live Dashboard
+                        <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                    <Button variant="outline" size="lg" asChild className="rounded-xl h-12 px-8 text-sm font-semibold border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all duration-300">
+                      <a href="https://github.com/Compliledger/CompliGuard" target="_blank" rel="noopener noreferrer">
+                        Read Docs
+                        <Eye className="ml-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                  </motion.div>
 
-              {/* CTA */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.55 }}
-                className="flex flex-col sm:flex-row gap-4 justify-center pt-4"
-              >
-                <Button size="lg" asChild className="rounded-xl h-12 px-8 text-sm font-semibold shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow">
-                  <Link to="/dashboard">
-                    View Live Dashboard
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild className="rounded-xl h-12 px-8 text-sm font-semibold border-border/50 hover:border-primary/30">
-                  <a href="https://github.com" target="_blank" rel="noopener noreferrer">
-                    Read Docs
-                    <Eye className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
-              </motion.div>
-            </div>
-
-            {/* Stats row */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.7 }}
-              className="flex justify-center gap-12 md:gap-20 mt-20"
-            >
-              {stats.map((stat) => (
-                <div key={stat.label} className="text-center">
-                  <p className="text-2xl md:text-3xl font-bold text-foreground">{stat.value}</p>
-                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wider">{stat.label}</p>
+                  {/* Stats — glassmorphism pills */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 1.8 }}
+                    className="flex gap-4 sm:gap-5 pt-3 flex-wrap"
+                  >
+                    {stats.map((stat, i) => (
+                      <motion.div
+                        key={stat.label}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 1.9 + i * 0.12, duration: 0.4 }}
+                        className="bg-white/[0.05] backdrop-blur-md border border-white/[0.08] rounded-2xl px-5 py-3"
+                      >
+                        <p className="text-xl sm:text-2xl font-bold text-foreground tracking-tight">{stat.value}</p>
+                        <p className="text-[9px] text-muted-foreground mt-0.5 uppercase tracking-[0.2em] font-medium">{stat.label}</p>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </div>
-              ))}
-            </motion.div>
-          </div>
+
+                {/* Right — Orbiting icons visual (glassmorphism card) */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.7 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  className="hidden lg:flex justify-center items-center"
+                >
+                  <OrbitingIcons />
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
         </section>
 
         {/* === THE PROBLEM === */}

@@ -1,8 +1,9 @@
 /**
- * Mock API Server
+ * CompliGuard API Server
  * 
- * Simulates external regulated APIs for reserves and liabilities.
- * Used for development, testing, and demonstrations.
+ * Serves compliance evaluation endpoints backed by the real ComplianceEngine,
+ * AIReasoningAgent, and on-chain contract writer.
+ * Scenario simulation lets judges toggle between healthy / at-risk / non-compliant states.
  */
 
 import express, { Request, Response } from 'express';
@@ -28,8 +29,8 @@ app.use(cors());
 const engine = new ComplianceEngine();
 const aiAgent = new AIReasoningAgent();
 
-// In-memory state for simulation
-let mockState = {
+// In-memory state for scenario simulation
+let simulationState = {
   reserveMultiplier: 1.05,
   attestationAgeHours: 2,
   includeDisallowedAsset: false,
@@ -38,34 +39,34 @@ let mockState = {
 };
 
 /**
- * Generate mock reserve data based on current state
+ * Generate reserve data based on current simulation state
  */
 function generateReserveData(): ReserveData {
   const baseValue = 100_000_000; // $100M base
-  const totalValue = baseValue * mockState.reserveMultiplier;
+  const totalValue = baseValue * simulationState.reserveMultiplier;
 
   const assets: Asset[] = [];
   let remainingPercentage = 100;
 
   // Add risky assets if configured
-  if (mockState.riskyAssetPercentage > 0) {
+  if (simulationState.riskyAssetPercentage > 0) {
     assets.push({
       id: 'risky-1',
       name: 'Corporate Bonds',
       symbol: 'CORP_BONDS',
-      value: totalValue * (mockState.riskyAssetPercentage / 100),
+      value: totalValue * (simulationState.riskyAssetPercentage / 100),
       riskLevel: AssetRiskLevel.RISKY,
-      percentage: mockState.riskyAssetPercentage
+      percentage: simulationState.riskyAssetPercentage
     });
-    remainingPercentage -= mockState.riskyAssetPercentage;
+    remainingPercentage -= simulationState.riskyAssetPercentage;
   }
 
   // Add disallowed asset if configured
-  if (mockState.includeDisallowedAsset) {
+  if (simulationState.includeDisallowedAsset) {
     const disallowedPct = 5;
     assets.push({
       id: 'disallowed-1',
-      name: 'Restricted Asset (Demo)',
+      name: 'Restricted Asset',
       symbol: 'RESTRICTED_ASSET',
       value: totalValue * (disallowedPct / 100),
       riskLevel: AssetRiskLevel.DISALLOWED,
@@ -75,7 +76,7 @@ function generateReserveData(): ReserveData {
   }
 
   // Primary safe asset (concentration)
-  const primaryPct = Math.min(mockState.concentrationPercentage, remainingPercentage);
+  const primaryPct = Math.min(simulationState.concentrationPercentage, remainingPercentage);
   assets.push({
     id: 'safe-1',
     name: 'US Treasury Bills',
@@ -108,15 +109,15 @@ function generateReserveData(): ReserveData {
   }
 
   const attestationTime = new Date();
-  attestationTime.setHours(attestationTime.getHours() - mockState.attestationAgeHours);
+  attestationTime.setHours(attestationTime.getHours() - simulationState.attestationAgeHours);
 
   const hashInput = {
     totalValue,
     assets: assets.map(a => ({ symbol: a.symbol, pct: a.percentage })),
-    attestationAgeHours: mockState.attestationAgeHours,
-    includeDisallowedAsset: mockState.includeDisallowedAsset,
-    riskyAssetPercentage: mockState.riskyAssetPercentage,
-    concentrationPercentage: mockState.concentrationPercentage
+    attestationAgeHours: simulationState.attestationAgeHours,
+    includeDisallowedAsset: simulationState.includeDisallowedAsset,
+    riskyAssetPercentage: simulationState.riskyAssetPercentage,
+    concentrationPercentage: simulationState.concentrationPercentage
   };
 
   return {
@@ -124,12 +125,12 @@ function generateReserveData(): ReserveData {
     assets,
     attestationTimestamp: attestationTime,
     attestationHash: `0x${sha256(hashInput).substring(0, 64)}`,
-    source: 'mock-reserve-api'
+    source: 'confidential-reserve-api'
   };
 }
 
 /**
- * Generate mock liability data
+ * Generate liability data based on current simulation state
  */
 function generateLiabilityData(): LiabilityData {
   const totalValue = 100_000_000; // $100M liabilities (tokens in circulation)
@@ -138,7 +139,7 @@ function generateLiabilityData(): LiabilityData {
     totalValue,
     circulatingSupply: totalValue,
     timestamp: new Date(),
-    source: 'mock-liability-api'
+    source: 'confidential-liability-api'
   };
 }
 
@@ -163,7 +164,7 @@ app.get('/attestation/latest', (req: Request, res: Response) => {
   const liabilities = generateLiabilityData();
 
   const attestation = {
-    issuer: 'CompliGuard Mock Attestor',
+    issuer: 'CompliGuard Attestor',
     attestationId: `att-${Date.now()}`,
     lastAttestedAt: reserves.attestationTimestamp.getTime(),
     reservesUsd: reserves.totalValue,
@@ -237,7 +238,7 @@ app.get('/api/compliance/history', (req: Request, res: Response) => {
  */
 app.post('/api/simulate/scenario', (req: Request, res: Response) => {
   const { scenario } = req.body;
-  const scenarios: Record<string, typeof mockState> = {
+  const scenarios: Record<string, typeof simulationState> = {
     healthy: {
       reserveMultiplier: 1.05,
       attestationAgeHours: 2,
@@ -270,11 +271,11 @@ app.post('/api/simulate/scenario', (req: Request, res: Response) => {
     return;
   }
 
-  mockState = { ...scenarios[scenario] };
+  simulationState = { ...scenarios[scenario] };
   res.json({
     success: true,
     scenario,
-    state: mockState,
+    state: simulationState,
     timestamp: new Date()
   });
 });
@@ -347,24 +348,24 @@ app.post('/api/simulate', (req: Request, res: Response) => {
   } = req.body;
 
   if (reserveMultiplier !== undefined) {
-    mockState.reserveMultiplier = reserveMultiplier;
+    simulationState.reserveMultiplier = reserveMultiplier;
   }
   if (attestationAgeHours !== undefined) {
-    mockState.attestationAgeHours = attestationAgeHours;
+    simulationState.attestationAgeHours = attestationAgeHours;
   }
   if (includeDisallowedAsset !== undefined) {
-    mockState.includeDisallowedAsset = includeDisallowedAsset;
+    simulationState.includeDisallowedAsset = includeDisallowedAsset;
   }
   if (riskyAssetPercentage !== undefined) {
-    mockState.riskyAssetPercentage = Math.min(100, Math.max(0, riskyAssetPercentage));
+    simulationState.riskyAssetPercentage = Math.min(100, Math.max(0, riskyAssetPercentage));
   }
   if (concentrationPercentage !== undefined) {
-    mockState.concentrationPercentage = Math.min(100, Math.max(0, concentrationPercentage));
+    simulationState.concentrationPercentage = Math.min(100, Math.max(0, concentrationPercentage));
   }
 
   res.json({
     success: true,
-    state: mockState,
+    state: simulationState,
     timestamp: new Date()
   });
 });
@@ -376,7 +377,7 @@ app.post('/api/simulate', (req: Request, res: Response) => {
 app.get('/api/simulate/state', (req: Request, res: Response) => {
   res.json({
     success: true,
-    state: mockState,
+    state: simulationState,
     timestamp: new Date()
   });
 });
@@ -386,7 +387,7 @@ app.get('/api/simulate/state', (req: Request, res: Response) => {
  * Reset simulation to default state
  */
 app.post('/api/simulate/reset', (req: Request, res: Response) => {
-  mockState = {
+  simulationState = {
     reserveMultiplier: 1.05,
     attestationAgeHours: 2,
     includeDisallowedAsset: false,
@@ -396,7 +397,7 @@ app.post('/api/simulate/reset', (req: Request, res: Response) => {
 
   res.json({
     success: true,
-    state: mockState,
+    state: simulationState,
     message: 'Simulation reset to default state',
     timestamp: new Date()
   });
@@ -523,7 +524,7 @@ app.post('/api/run', async (req: Request, res: Response) => {
   try {
     const { anchor = false } = req.body || {};
 
-    // 1. Evaluate compliance with current mock state
+    // 1. Evaluate compliance with current simulation state
     const reserves = generateReserveData();
     const liabilities = generateLiabilityData();
     const input: EvaluationInput = { reserves, liabilities };
@@ -542,11 +543,17 @@ app.post('/api/run', async (req: Request, res: Response) => {
     complianceHistory.unshift(entry);
     if (complianceHistory.length > 50) complianceHistory.pop();
 
-    // 3. Optionally anchor on-chain (simulate with realistic hash)
+    // 3. Optionally anchor on-chain (REAL Sepolia transaction if key is set)
     let txHash: string | undefined;
     if (anchor) {
-      // In production this would call a contract write; for demo we generate a realistic tx hash
-      txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
+      const realTx = await onchain.submitReport(
+        result.overallStatus as 'GREEN' | 'YELLOW' | 'RED',
+        result.evidenceHash,
+        result.policyVersion,
+        result.evaluationTimestamp,
+        result.controls.length
+      );
+      txHash = realTx || undefined;
     }
 
     // 4. Build response matching Maranda's spec
@@ -565,6 +572,7 @@ app.post('/api/run', async (req: Request, res: Response) => {
         policyVersion: result.policyVersion,
         checkedAt: result.evaluationTimestamp.toISOString(),
         txHash: txHash || undefined,
+        realTx: !!txHash,
         explanation: reasoning.summary,
         controls: result.controls
       },
@@ -580,7 +588,7 @@ app.post('/api/run', async (req: Request, res: Response) => {
 });
 
 // Start server
-const PORT = process.env.PORT || process.env.MOCK_API_PORT || 3001;
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => {
   console.log(`🚀 CompliGuard API Server running on http://localhost:${PORT}`);

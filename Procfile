@@ -1,1 +1,1 @@
-web: npm run mock-server
+web: npm run server

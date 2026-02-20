@@ -2,5 +2,5 @@
   "schedule": "0 */5 * * * *",
   "reserveApiUrl": "http://localhost:3001",
   "liabilityApiUrl": "http://localhost:3001",
-  "reportContractAddress": ""
+  "reportContractAddress": "0xf9BaAE04C412c23BC750E79C84A19692708E71b9"
 }

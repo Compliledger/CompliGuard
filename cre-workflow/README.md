@@ -48,10 +48,10 @@ cp .env.example .env
 # Edit .env with your API keys
 ```
 
-### 5. Start Mock API (in a separate terminal)
+### 5. Start API Server (in a separate terminal)
 
 ```bash
-cd .. && npm run mock-server
+cd .. && npm run server
 ```
 
 ### 6. Simulate the workflow
