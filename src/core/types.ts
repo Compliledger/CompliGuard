@@ -73,26 +73,30 @@ export interface ComplianceResult {
   explanation: string;
 }
 
+/** Overall compliance label (mapped from internal GREEN/YELLOW/RED) */
+export type OverallComplianceLabel = 'HEALTHY' | 'AT_RISK' | 'NON_COMPLIANT';
+
 /** Configuration for the policy engine */
 export interface PolicyConfig {
   version: string;
-  
+
   reserveRatio: {
-    greenThreshold: number;
-    yellowThreshold: number;
+    greenThreshold: number;   // >= this → GREEN
+    yellowThreshold: number;  // >= this && < green → YELLOW; < this → RED
   };
-  
+
   proofFreshness: {
-    greenMaxAgeHours: number;
-    yellowMaxAgeHours: number;
+    greenMaxAgeHours: number;   // <= this → GREEN
+    yellowMaxAgeHours: number;  // <= this → YELLOW; > this → RED
   };
-  
+
   assetQuality: {
-    maxRiskyPercentage: number;
+    restrictedAssetLevels: string[]; // any asset with riskLevel in this list → RED
   };
-  
+
   assetConcentration: {
-    maxSingleAssetPercentage: number;
+    greenMaxPercentage: number;   // <= this → GREEN
+    yellowMaxPercentage: number;  // <= this → YELLOW; > this → RED
   };
 }
 
@@ -133,25 +137,26 @@ export interface HealthStatus {
   };
 }
 
-/** Default policy configuration */
+/** Default policy configuration — single source of truth for all thresholds */
 export const DEFAULT_POLICY_CONFIG: PolicyConfig = {
   version: '1.0.0',
-  
+
   reserveRatio: {
     greenThreshold: 1.02,
     yellowThreshold: 1.00
   },
-  
+
   proofFreshness: {
-    greenMaxAgeHours: 6,
+    greenMaxAgeHours: 12,
     yellowMaxAgeHours: 24
   },
-  
+
   assetQuality: {
-    maxRiskyPercentage: 30
+    restrictedAssetLevels: ['DISALLOWED']
   },
-  
+
   assetConcentration: {
-    maxSingleAssetPercentage: 75
+    greenMaxPercentage: 60,
+    yellowMaxPercentage: 75
   }
 };

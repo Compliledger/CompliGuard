@@ -1,12 +1,12 @@
 /**
  * Asset Concentration Compliance Rule
- * 
- * Evaluates portfolio diversification.
- * High concentration in a single asset increases systemic risk.
- * 
+ *
+ * Evaluates portfolio diversification by checking the largest single-asset percentage.
+ *
  * Rules:
- * - Single asset > 75% → YELLOW (concentration warning)
- * - Otherwise → GREEN (well diversified)
+ * - maxAssetPercentage <= 60  → GREEN
+ * - maxAssetPercentage <= 75  → YELLOW  (edge case: exactly 75 must PASS as YELLOW)
+ * - maxAssetPercentage >  75  → RED
  */
 
 import {
@@ -32,24 +32,24 @@ export function evaluateAssetConcentration(
   config: PolicyConfig
 ): ControlResult & { details?: ConcentrationDetails } {
   const { reserves } = input;
-  const { maxSingleAssetPercentage } = config.assetConcentration;
+  const { greenMaxPercentage, yellowMaxPercentage } = config.assetConcentration;
 
   if (reserves.assets.length === 0) {
     return {
       controlType: ControlType.ASSET_CONCENTRATION,
       status: ComplianceStatus.RED,
       value: 0,
-      threshold: maxSingleAssetPercentage,
+      threshold: yellowMaxPercentage,
       message: 'No assets in reserve portfolio.',
       timestamp: new Date()
     };
   }
 
-  const sortedAssets = [...reserves.assets].sort((a, b) => b.percentage - a.percentage);
-  const highestAsset = sortedAssets[0];
+  const maxPercentage = Math.max(...reserves.assets.map(a => a.percentage));
+  const highestAsset = reserves.assets.find(a => a.percentage === maxPercentage)!;
 
   const details: ConcentrationDetails = {
-    highestConcentration: highestAsset.percentage,
+    highestConcentration: maxPercentage,
     highestConcentrationAsset: highestAsset.symbol,
     assetCount: reserves.assets.length
   };
@@ -57,19 +57,23 @@ export function evaluateAssetConcentration(
   let status: ComplianceStatus;
   let message: string;
 
-  if (highestAsset.percentage > maxSingleAssetPercentage) {
-    status = ComplianceStatus.YELLOW;
-    message = `Concentration warning: ${highestAsset.symbol} represents ${highestAsset.percentage.toFixed(1)}% of reserves (threshold: ${maxSingleAssetPercentage}%).`;
-  } else {
+  if (maxPercentage <= greenMaxPercentage) {
     status = ComplianceStatus.GREEN;
-    message = `Portfolio diversification adequate. Highest concentration: ${highestAsset.symbol} at ${highestAsset.percentage.toFixed(1)}%.`;
+    message = `Portfolio well diversified. Highest concentration: ${highestAsset.symbol} at ${maxPercentage.toFixed(1)}%.`;
+  } else if (maxPercentage <= yellowMaxPercentage) {
+    // Edge case: exactly 75 must PASS (YELLOW, not RED)
+    status = ComplianceStatus.YELLOW;
+    message = `Concentration warning: ${highestAsset.symbol} at ${maxPercentage.toFixed(1)}% exceeds the ${greenMaxPercentage}% optimal threshold.`;
+  } else {
+    status = ComplianceStatus.RED;
+    message = `VIOLATION: ${highestAsset.symbol} at ${maxPercentage.toFixed(1)}% exceeds the ${yellowMaxPercentage}% maximum concentration limit.`;
   }
 
   return {
     controlType: ControlType.ASSET_CONCENTRATION,
     status,
-    value: highestAsset.percentage,
-    threshold: maxSingleAssetPercentage,
+    value: maxPercentage,
+    threshold: status === ComplianceStatus.GREEN ? greenMaxPercentage : yellowMaxPercentage,
     message,
     timestamp: new Date(),
     details

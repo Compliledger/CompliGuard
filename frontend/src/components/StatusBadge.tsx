@@ -1,14 +1,46 @@
 import { CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+type OverallStatus = 'HEALTHY' | 'AT_RISK' | 'NON_COMPLIANT' | 'GREEN' | 'YELLOW' | 'RED';
+
 interface StatusBadgeProps {
-  status: 'GREEN' | 'YELLOW' | 'RED';
+  status: OverallStatus;
 }
 
 const statusConfig = {
+  HEALTHY: {
+    label: 'Healthy',
+    subline: 'All controls passed — no enforcement actions required',
+    icon: CheckCircle,
+    bgClass: 'bg-compliance-green/10 dark:bg-compliance-green/5',
+    textClass: 'text-compliance-green',
+    borderClass: 'border-compliance-green/30',
+    glowColor: 'hsl(var(--compliance-green) / 0.15)',
+    ringColor: 'hsl(var(--compliance-green) / 0.3)',
+  },
+  AT_RISK: {
+    label: 'At Risk',
+    subline: 'Review recommended — one or more controls need attention',
+    icon: AlertTriangle,
+    bgClass: 'bg-compliance-yellow/10 dark:bg-compliance-yellow/5',
+    textClass: 'text-compliance-yellow',
+    borderClass: 'border-compliance-yellow/30',
+    glowColor: 'hsl(var(--compliance-yellow) / 0.15)',
+    ringColor: 'hsl(var(--compliance-yellow) / 0.3)',
+  },
+  NON_COMPLIANT: {
+    label: 'Non-Compliant',
+    subline: 'Enforcement action required immediately',
+    icon: XCircle,
+    bgClass: 'bg-compliance-red/10 dark:bg-compliance-red/5',
+    textClass: 'text-compliance-red',
+    borderClass: 'border-compliance-red/30',
+    glowColor: 'hsl(var(--compliance-red) / 0.15)',
+    ringColor: 'hsl(var(--compliance-red) / 0.3)',
+  },
   GREEN: {
-    label: 'Fully Compliant',
-    subline: 'No enforcement actions required',
+    label: 'Healthy',
+    subline: 'All controls passed — no enforcement actions required',
     icon: CheckCircle,
     bgClass: 'bg-compliance-green/10 dark:bg-compliance-green/5',
     textClass: 'text-compliance-green',
@@ -18,7 +50,7 @@ const statusConfig = {
   },
   YELLOW: {
     label: 'At Risk',
-    subline: 'Review recommended within 24h',
+    subline: 'Review recommended — one or more controls need attention',
     icon: AlertTriangle,
     bgClass: 'bg-compliance-yellow/10 dark:bg-compliance-yellow/5',
     textClass: 'text-compliance-yellow',

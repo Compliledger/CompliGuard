@@ -42,20 +42,23 @@ export function evaluateReserveRatio(
     };
   }
 
-  const ratio = reserves.totalValue / liabilities.totalValue;
+  // Round to 10 decimal places to avoid floating point precision issues
+  // e.g. 1.0000000000000002 should be treated as 1.00 (YELLOW, not RED)
+  const ratio = Math.round((reserves.totalValue / liabilities.totalValue) * 1e10) / 1e10;
 
   let status: ComplianceStatus;
   let message: string;
 
   if (ratio >= greenThreshold) {
     status = ComplianceStatus.GREEN;
-    message = `Reserve ratio of ${(ratio * 100).toFixed(2)}% meets the ${(greenThreshold * 100).toFixed(0)}% threshold.`;
+    message = `Reserve ratio of ${ratio.toFixed(3)}x meets the ${greenThreshold.toFixed(2)}x threshold.`;
   } else if (ratio >= yellowThreshold) {
+    // Edge case: ratio === 1.00 must PASS (YELLOW, not RED)
     status = ComplianceStatus.YELLOW;
-    message = `Reserve ratio of ${(ratio * 100).toFixed(2)}% is below optimal but above minimum threshold.`;
+    message = `Reserve ratio of ${ratio.toFixed(3)}x is below optimal but above minimum threshold.`;
   } else {
     status = ComplianceStatus.RED;
-    message = `CRITICAL: Reserve ratio of ${(ratio * 100).toFixed(2)}% is below 100%. System is undercollateralized.`;
+    message = `CRITICAL: Reserve ratio of ${ratio.toFixed(3)}x is below 1.00x. System is undercollateralized.`;
   }
 
   return {

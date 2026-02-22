@@ -15,7 +15,8 @@ import {
   AssetRiskLevel,
   ApiResponse,
   ComplianceStatus,
-  ComplianceResult
+  ComplianceResult,
+  OverallComplianceLabel
 } from '../core/types';
 import { ComplianceEngine, EvaluationInput } from '../core';
 import { AIReasoningAgent } from '../core/ai-reasoning';
@@ -28,6 +29,18 @@ app.use(cors());
 // Shared engine + AI agent for status endpoint
 const engine = new ComplianceEngine();
 const aiAgent = new AIReasoningAgent();
+
+/**
+ * Map internal GREEN/YELLOW/RED to spec-defined output labels.
+ * GREEN  → HEALTHY
+ * YELLOW → AT_RISK
+ * RED    → NON_COMPLIANT
+ */
+function toOverallLabel(status: ComplianceStatus): OverallComplianceLabel {
+  if (status === ComplianceStatus.RED) return 'NON_COMPLIANT';
+  if (status === ComplianceStatus.YELLOW) return 'AT_RISK';
+  return 'HEALTHY';
+}
 
 // In-memory state for scenario simulation
 let simulationState = {
@@ -146,11 +159,13 @@ function generateLiabilityData(): LiabilityData {
 // ─── Compliance evaluation history (for frontend) ────────────────────────────
 const complianceHistory: Array<{
   timestamp: string;
-  status: ComplianceStatus;
+  status: OverallComplianceLabel;
   evidenceHash: string;
   policyVersion: string;
   explanation: string;
   controls: ComplianceResult['controls'];
+  reserveRatio: number;
+  proofAgeHours: number;
 }> = [];
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
@@ -192,13 +207,19 @@ app.get('/api/compliance/status', (req: Request, res: Response) => {
     const result = engine.evaluate(input);
     const reasoning = aiAgent.generateReasoning(result);
 
+    const reserveRatio = liabilities.totalValue > 0
+      ? Math.round((reserves.totalValue / liabilities.totalValue) * 1e10) / 1e10
+      : 0;
+
     const entry = {
       timestamp: result.evaluationTimestamp.toISOString(),
-      status: result.overallStatus,
+      status: toOverallLabel(result.overallStatus),
       evidenceHash: result.evidenceHash,
       policyVersion: result.policyVersion,
       explanation: reasoning.summary,
-      controls: result.controls
+      controls: result.controls,
+      reserveRatio,
+      proofAgeHours: result.controls.find(c => c.controlType === 'PROOF_FRESHNESS')?.value ?? 0
     };
 
     // Keep last 50 entries
@@ -240,6 +261,7 @@ app.post('/api/simulate/scenario', (req: Request, res: Response) => {
   const { scenario } = req.body;
   const scenarios: Record<string, typeof simulationState> = {
     healthy: {
+      // All controls GREEN: ratio>=1.02, age<=12h, no restricted, concentration<=60
       reserveMultiplier: 1.05,
       attestationAgeHours: 2,
       includeDisallowedAsset: false,
@@ -247,18 +269,20 @@ app.post('/api/simulate/scenario', (req: Request, res: Response) => {
       concentrationPercentage: 50
     },
     at_risk: {
+      // At least one YELLOW, no RED: ratio 1.00-1.02, age 12-24h, concentration 60-75
       reserveMultiplier: 1.01,
-      attestationAgeHours: 10,
+      attestationAgeHours: 18,
       includeDisallowedAsset: false,
-      riskyAssetPercentage: 25,
-      concentrationPercentage: 78
+      riskyAssetPercentage: 10,
+      concentrationPercentage: 70
     },
     non_compliant: {
+      // At least one RED: ratio<1.00, age>24h, restricted asset present, concentration>75
       reserveMultiplier: 0.95,
       attestationAgeHours: 30,
       includeDisallowedAsset: true,
-      riskyAssetPercentage: 40,
-      concentrationPercentage: 85
+      riskyAssetPercentage: 10,
+      concentrationPercentage: 80
     }
   };
 
@@ -532,13 +556,21 @@ app.post('/api/run', async (req: Request, res: Response) => {
     const reasoning = aiAgent.generateReasoning(result);
 
     // 2. Store in history
+    const reserveRatio = liabilities.totalValue > 0
+      ? Math.round((reserves.totalValue / liabilities.totalValue) * 1e10) / 1e10
+      : 0;
+    const proofAgeHours = result.controls.find(c => c.controlType === 'PROOF_FRESHNESS')?.value ?? 0;
+    const overallLabel = toOverallLabel(result.overallStatus);
+
     const entry = {
       timestamp: result.evaluationTimestamp.toISOString(),
-      status: result.overallStatus,
+      status: overallLabel,
       evidenceHash: result.evidenceHash,
       policyVersion: result.policyVersion,
       explanation: reasoning.summary,
-      controls: result.controls
+      controls: result.controls,
+      reserveRatio,
+      proofAgeHours
     };
     complianceHistory.unshift(entry);
     if (complianceHistory.length > 50) complianceHistory.pop();
@@ -556,20 +588,19 @@ app.post('/api/run', async (req: Request, res: Response) => {
       txHash = realTx || undefined;
     }
 
-    // 4. Build response matching Maranda's spec
-    const reserveRatio = liabilities.totalValue > 0
-      ? reserves.totalValue / liabilities.totalValue
-      : 0;
-
+    // 4. Build response per spec
     res.json({
       success: true,
       data: {
-        status: result.overallStatus,
+        overallStatus: overallLabel,
+        status: overallLabel,
         reserveRatio,
+        proofAgeHours,
         reserveValue: reserves.totalValue,
         liabilityValue: liabilities.totalValue,
         evidenceHash: result.evidenceHash,
         policyVersion: result.policyVersion,
+        evaluationTimestamp: result.evaluationTimestamp.toISOString(),
         checkedAt: result.evaluationTimestamp.toISOString(),
         txHash: txHash || undefined,
         realTx: !!txHash,

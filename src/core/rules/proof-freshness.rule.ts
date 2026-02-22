@@ -32,7 +32,8 @@ export function evaluateProofFreshness(
 
   const attestationTime = new Date(reserves.attestationTimestamp);
   const ageMs = currentTime.getTime() - attestationTime.getTime();
-  const ageHours = ageMs / (1000 * 60 * 60);
+  // Ensure non-negative (future timestamps treated as 0 age)
+  const ageHours = Math.max(0, ageMs / (1000 * 60 * 60));
 
   let status: ComplianceStatus;
   let message: string;
@@ -41,8 +42,9 @@ export function evaluateProofFreshness(
     status = ComplianceStatus.GREEN;
     message = `Proof attestation is ${ageHours.toFixed(1)} hours old, within the ${greenMaxAgeHours}-hour freshness window.`;
   } else if (ageHours <= yellowMaxAgeHours) {
+    // Edge case: ageHours === 24 must PASS (YELLOW, not RED)
     status = ComplianceStatus.YELLOW;
-    message = `Proof attestation is ${ageHours.toFixed(1)} hours old. Consider refreshing attestation.`;
+    message = `Proof attestation is ${ageHours.toFixed(1)} hours old, approaching the ${yellowMaxAgeHours}-hour maximum.`;
   } else {
     status = ComplianceStatus.RED;
     message = `STALE: Proof attestation is ${ageHours.toFixed(1)} hours old, exceeding the ${yellowMaxAgeHours}-hour maximum.`;
