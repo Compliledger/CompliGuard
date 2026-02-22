@@ -15,7 +15,12 @@ import { mainnet } from 'viem/chains';
 import { ReserveData, Asset, AssetRiskLevel } from '../core/types';
 import { sha256 } from '../utils/hash';
 
-const POR_FEED_ADDRESS = '0x9A709B7B69EA42D5eeb1ceBC48674C69E1569eC6' as `0x${string}`;
+// WBTC Proof of Reserve feed (AggregatorV3Interface) — Ethereum Mainnet
+// Returns the total BTC held in reserve backing WBTC
+const POR_FEED_ADDRESS = '0xa81FE04086865e63E12dD3776978E49DEEa2ea4e' as `0x${string}`;
+
+// BTC/USD price feed — used to convert BTC reserves to USD
+const BTC_USD_FEED_ADDRESS = '0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c' as `0x${string}`;
 
 // AggregatorV3Interface — minimal ABI needed
 const AGGREGATOR_V3_ABI = [
@@ -48,11 +53,11 @@ const AGGREGATOR_V3_ABI = [
   }
 ] as const;
 
-// Use mainnet RPC — prefer env var, fall back to public node
+// Use mainnet RPC — prefer env var, fall back to public nodes
 const MAINNET_RPC_URL =
   process.env.ETHEREUM_MAINNET_RPC_URL ||
   process.env.ETHEREUM_RPC_URL ||
-  'https://ethereum-rpc.publicnode.com';
+  'https://eth.llamarpc.com';
 
 const mainnetClient = createPublicClient({
   chain: mainnet,
@@ -74,7 +79,8 @@ export interface ChainlinkPoRData {
  */
 export async function fetchChainlinkPoR(): Promise<ChainlinkPoRData | null> {
   try {
-    const [roundData, decimals, description] = await Promise.all([
+    // Fetch PoR feed + BTC/USD price feed in parallel
+    const [roundData, decimals, description, btcPriceData, btcDecimals] = await Promise.all([
       mainnetClient.readContract({
         address: POR_FEED_ADDRESS,
         abi: AGGREGATOR_V3_ABI,
@@ -89,14 +95,32 @@ export async function fetchChainlinkPoR(): Promise<ChainlinkPoRData | null> {
         address: POR_FEED_ADDRESS,
         abi: AGGREGATOR_V3_ABI,
         functionName: 'description'
+      }),
+      mainnetClient.readContract({
+        address: BTC_USD_FEED_ADDRESS,
+        abi: AGGREGATOR_V3_ABI,
+        functionName: 'latestRoundData'
+      }),
+      mainnetClient.readContract({
+        address: BTC_USD_FEED_ADDRESS,
+        abi: AGGREGATOR_V3_ABI,
+        functionName: 'decimals'
       })
     ]);
 
     const [roundId, answer, , updatedAt] = roundData as [bigint, bigint, bigint, bigint, bigint];
     const dec = Number(decimals);
 
-    // answer is scaled by 10^decimals — convert to a plain number
-    const reserveValue = Number(answer) / Math.pow(10, dec);
+    // PoR answer is BTC count scaled by 10^decimals
+    const reserveBtc = Number(answer) / Math.pow(10, dec);
+
+    // BTC/USD price
+    const [, btcPrice] = btcPriceData as [bigint, bigint, bigint, bigint, bigint];
+    const btcDec = Number(btcDecimals);
+    const btcUsdPrice = Number(btcPrice) / Math.pow(10, btcDec);
+
+    // Reserve value in USD
+    const reserveValue = reserveBtc * btcUsdPrice;
 
     return {
       reserveValue,
@@ -148,7 +172,8 @@ export async function buildReserveDataFromChainlink(): Promise<ReserveData | nul
 }
 
 export const POR_FEED_INFO = {
-  address:     POR_FEED_ADDRESS,
-  network:     'mainnet',
-  explorerUrl: `https://etherscan.io/address/${POR_FEED_ADDRESS}`
+  porFeedAddress:    POR_FEED_ADDRESS,
+  btcUsdFeedAddress: BTC_USD_FEED_ADDRESS,
+  network:           'mainnet',
+  explorerUrl:       `https://etherscan.io/address/${POR_FEED_ADDRESS}`
 };
