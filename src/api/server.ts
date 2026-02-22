@@ -21,6 +21,7 @@ import {
 import { ComplianceEngine, EvaluationInput } from '../core';
 import { AIReasoningAgent } from '../core/ai-reasoning';
 import { sha256 } from '../utils/hash';
+import { buildReserveDataFromChainlink, POR_FEED_INFO } from './chainlink-por-reader';
 
 const app = express();
 app.use(express.json());
@@ -42,7 +43,11 @@ function toOverallLabel(status: ComplianceStatus): OverallComplianceLabel {
   return 'HEALTHY';
 }
 
-// In-memory state for scenario simulation
+// When true, reserve data is fetched live from the Chainlink PoR feed.
+// When false (demo/simulation mode), the mock generator is used instead.
+let liveMode = true;
+
+// In-memory state for scenario simulation (used when liveMode = false)
 let simulationState = {
   reserveMultiplier: 1.05,
   attestationAgeHours: 2,
@@ -52,9 +57,10 @@ let simulationState = {
 };
 
 /**
- * Generate reserve data based on current simulation state
+ * Generate SIMULATED reserve data based on current simulation state.
+ * Only used when liveMode = false.
  */
-function generateReserveData(): ReserveData {
+function generateSimulatedReserveData(): ReserveData {
   const baseValue = 100_000_000; // $100M base
   const totalValue = baseValue * simulationState.reserveMultiplier;
 
@@ -138,8 +144,26 @@ function generateReserveData(): ReserveData {
     assets,
     attestationTimestamp: attestationTime,
     attestationHash: `0x${sha256(hashInput).substring(0, 64)}`,
-    source: 'confidential-reserve-api'
+    source: 'simulation'
   };
+}
+
+/**
+ * Primary reserve data source.
+ * In live mode: fetches from Chainlink PoR feed on Ethereum mainnet.
+ * In simulation mode: returns mock data based on simulationState.
+ * Falls back to simulation if the Chainlink RPC call fails.
+ */
+async function getReserveData(): Promise<ReserveData> {
+  if (liveMode) {
+    const chainlinkData = await buildReserveDataFromChainlink();
+    if (chainlinkData) {
+      console.log(`[PoR] Live reserve data fetched: $${(chainlinkData.totalValue / 1e6).toFixed(2)}M, attested at ${chainlinkData.attestationTimestamp.toISOString()}`);
+      return chainlinkData;
+    }
+    console.warn('[PoR] Chainlink fetch failed — falling back to simulation');
+  }
+  return generateSimulatedReserveData();
 }
 
 /**
@@ -174,8 +198,8 @@ const complianceHistory: Array<{
  * GET /attestation/latest
  * Plan.md M1 format — unified attestation endpoint
  */
-app.get('/attestation/latest', (req: Request, res: Response) => {
-  const reserves = generateReserveData();
+app.get('/attestation/latest', async (req: Request, res: Response) => {
+  const reserves = await getReserveData();
   const liabilities = generateLiabilityData();
 
   const attestation = {
@@ -199,9 +223,9 @@ app.get('/attestation/latest', (req: Request, res: Response) => {
  * Returns the current compliance evaluation result.
  * This is the primary endpoint consumed by the frontend dashboard.
  */
-app.get('/api/compliance/status', (req: Request, res: Response) => {
+app.get('/api/compliance/status', async (req: Request, res: Response) => {
   try {
-    const reserves = generateReserveData();
+    const reserves = await getReserveData();
     const liabilities = generateLiabilityData();
     const input: EvaluationInput = { reserves, liabilities };
     const result = engine.evaluate(input);
@@ -296,10 +320,32 @@ app.post('/api/simulate/scenario', (req: Request, res: Response) => {
   }
 
   simulationState = { ...scenarios[scenario] };
+  liveMode = false; // switching to a named scenario disables live mode
   res.json({
     success: true,
     scenario,
     state: simulationState,
+    liveMode,
+    timestamp: new Date()
+  });
+});
+
+/**
+ * POST /api/live
+ * Toggle live Chainlink PoR mode on/off.
+ * Body: { live: true } to enable, { live: false } to use simulation.
+ */
+app.post('/api/live', (req: Request, res: Response) => {
+  const { live } = req.body;
+  if (typeof live !== 'boolean') {
+    res.status(400).json({ success: false, error: 'Body must be { live: true|false }', timestamp: new Date() });
+    return;
+  }
+  liveMode = live;
+  res.json({
+    success: true,
+    liveMode,
+    porFeed: POR_FEED_INFO,
     timestamp: new Date()
   });
 });
@@ -308,9 +354,9 @@ app.post('/api/simulate/scenario', (req: Request, res: Response) => {
  * GET /api/reserves
  * Returns current reserve data
  */
-app.get('/api/reserves', (req: Request, res: Response) => {
+app.get('/api/reserves', async (req: Request, res: Response) => {
   const apiKey = req.headers['x-api-key'];
-  
+
   if (!apiKey) {
     const response: ApiResponse<null> = {
       success: false,
@@ -321,7 +367,7 @@ app.get('/api/reserves', (req: Request, res: Response) => {
     return;
   }
 
-  const data = generateReserveData();
+  const data = await getReserveData();
   const response: ApiResponse<ReserveData> = {
     success: true,
     data,
@@ -548,8 +594,8 @@ app.post('/api/run', async (req: Request, res: Response) => {
   try {
     const { anchor = false } = req.body || {};
 
-    // 1. Evaluate compliance with current simulation state
-    const reserves = generateReserveData();
+    // 1. Evaluate compliance — live Chainlink PoR or simulation
+    const reserves = await getReserveData();
     const liabilities = generateLiabilityData();
     const input: EvaluationInput = { reserves, liabilities };
     const result = engine.evaluate(input);
