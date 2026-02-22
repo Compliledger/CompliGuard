@@ -21,7 +21,7 @@ import {
 import { ComplianceEngine, EvaluationInput } from '../core';
 import { AIReasoningAgent } from '../core/ai-reasoning';
 import { sha256 } from '../utils/hash';
-import { buildReserveDataFromChainlink, POR_FEED_INFO } from './chainlink-por-reader';
+import { buildReserveDataFromChainlink, fetchWbtcLiabilities, POR_FEED_INFO } from './chainlink-por-reader';
 
 const app = express();
 app.use(express.json());
@@ -167,17 +167,33 @@ async function getReserveData(): Promise<ReserveData> {
 }
 
 /**
- * Generate liability data based on current simulation state
+ * Generate SIMULATED liability data.
  */
-function generateLiabilityData(): LiabilityData {
+function generateSimulatedLiabilityData(): LiabilityData {
   const totalValue = 100_000_000; // $100M liabilities (tokens in circulation)
-
   return {
     totalValue,
     circulatingSupply: totalValue,
     timestamp: new Date(),
-    source: 'confidential-liability-api'
+    source: 'simulation'
   };
+}
+
+/**
+ * Primary liability data source.
+ * In live mode: fetches WBTC circulating supply from mainnet.
+ * In simulation mode: returns mock data.
+ */
+async function getLiabilityData(): Promise<LiabilityData> {
+  if (liveMode) {
+    const wbtcLiabilities = await fetchWbtcLiabilities();
+    if (wbtcLiabilities) {
+      console.log(`[PoR] Live liability data fetched: $${(wbtcLiabilities.totalValue / 1e6).toFixed(2)}M (${wbtcLiabilities.circulatingSupply.toFixed(2)} WBTC)`);
+      return wbtcLiabilities;
+    }
+    console.warn('[PoR] WBTC supply fetch failed — falling back to simulation');
+  }
+  return generateSimulatedLiabilityData();
 }
 
 // ─── Compliance evaluation history (for frontend) ────────────────────────────
@@ -200,7 +216,7 @@ const complianceHistory: Array<{
  */
 app.get('/attestation/latest', async (req: Request, res: Response) => {
   const reserves = await getReserveData();
-  const liabilities = generateLiabilityData();
+  const liabilities = await getLiabilityData();
 
   const attestation = {
     issuer: 'CompliGuard Attestor',
@@ -226,7 +242,7 @@ app.get('/attestation/latest', async (req: Request, res: Response) => {
 app.get('/api/compliance/status', async (req: Request, res: Response) => {
   try {
     const reserves = await getReserveData();
-    const liabilities = generateLiabilityData();
+    const liabilities = await getLiabilityData();
     const input: EvaluationInput = { reserves, liabilities };
     const result = engine.evaluate(input);
     const reasoning = aiAgent.generateReasoning(result);
@@ -381,9 +397,9 @@ app.get('/api/reserves', async (req: Request, res: Response) => {
  * GET /api/liabilities
  * Returns current liability data
  */
-app.get('/api/liabilities', (req: Request, res: Response) => {
+app.get('/api/liabilities', async (req: Request, res: Response) => {
   const apiKey = req.headers['x-api-key'];
-  
+
   if (!apiKey) {
     const response: ApiResponse<null> = {
       success: false,
@@ -394,13 +410,13 @@ app.get('/api/liabilities', (req: Request, res: Response) => {
     return;
   }
 
-  const data = generateLiabilityData();
+  const data = await getLiabilityData();
   const response: ApiResponse<LiabilityData> = {
     success: true,
     data,
     timestamp: new Date()
   };
-  
+
   res.json(response);
 });
 
@@ -596,7 +612,7 @@ app.post('/api/run', async (req: Request, res: Response) => {
 
     // 1. Evaluate compliance — live Chainlink PoR or simulation
     const reserves = await getReserveData();
-    const liabilities = generateLiabilityData();
+    const liabilities = await getLiabilityData();
     const input: EvaluationInput = { reserves, liabilities };
     const result = engine.evaluate(input);
     const reasoning = aiAgent.generateReasoning(result);
