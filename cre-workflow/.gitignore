@@ -1,0 +1,10 @@
+# CRE workflow build artifacts
+node_modules/
+dist/
+*.wasm
+
+# Environment secrets
+.env
+
+# Bun lock
+bun.lock

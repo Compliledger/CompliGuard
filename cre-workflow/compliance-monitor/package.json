@@ -1,0 +1,17 @@
+{
+  "name": "compliguard-compliance-monitor",
+  "version": "1.0.0",
+  "description": "CompliGuard CRE Workflow — on-chain PoR reads + compliance evaluation + Sepolia anchoring",
+  "private": true,
+  "scripts": {
+    "postinstall": "bunx cre-setup"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "^1.0.0",
+    "viem": "^2.21.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.0"
+  }
+}

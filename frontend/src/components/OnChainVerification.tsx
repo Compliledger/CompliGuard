@@ -51,11 +51,12 @@ export function OnChainVerification() {
     return () => clearInterval(interval);
   }, []);
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     GREEN: 'text-green-500',
     YELLOW: 'text-yellow-500',
     RED: 'text-red-500'
   };
+  const safeStatusColor = (s: string) => statusColors[s] || 'text-foreground';
 
   if (loading) {
     return (
@@ -186,7 +187,7 @@ export function OnChainVerification() {
             <div className="space-y-1">
               <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em]">Status</p>
               <motion.p
-                className={`font-bold ${statusColors[data.latestReport.status]}`}
+                className={`font-bold ${safeStatusColor(data.latestReport.status)}`}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}

@@ -680,6 +680,75 @@ app.post('/api/run', async (req: Request, res: Response) => {
   }
 });
 
+// ─── CRE WORKFLOW STATUS ENDPOINT ─────────────────────────────────────────────
+
+// Stores the latest result received from a CRE workflow execution
+let lastCREWorkflowResult: Record<string, unknown> | null = null;
+
+/**
+ * POST /api/cre/result
+ * Receives compliance results from a CRE workflow execution.
+ * The CRE workflow POSTs here in Step 4 (backend notification).
+ */
+app.post('/api/cre/result', (req: Request, res: Response) => {
+  const { source, status, evidenceHash, policyVersion, reserveRatio, controls } = req.body || {};
+
+  if (source !== 'cre-workflow') {
+    res.status(400).json({ success: false, error: 'Invalid source — expected cre-workflow' });
+    return;
+  }
+
+  lastCREWorkflowResult = {
+    status,
+    evidenceHash,
+    policyVersion,
+    reserveRatio,
+    controls,
+    receivedAt: new Date().toISOString(),
+  };
+
+  // Also push to compliance history so the dashboard picks it up
+  const entry = {
+    timestamp: new Date().toISOString(),
+    status: status || 'HEALTHY',
+    evidenceHash: evidenceHash || '',
+    policyVersion: policyVersion || '1.0.0',
+    explanation: `CRE Workflow result: ${status} (reserve ratio ${reserveRatio?.toFixed?.(4) || 'N/A'}x)`,
+    controls: controls || [],
+    reserveRatio: reserveRatio || 0,
+    proofAgeHours: 0
+  };
+  complianceHistory.unshift(entry);
+  if (complianceHistory.length > 50) complianceHistory.pop();
+
+  res.json({ success: true, message: 'CRE workflow result received', timestamp: new Date() });
+});
+
+/**
+ * GET /api/cre/status
+ * Returns the latest CRE workflow result and metadata about the workflow.
+ */
+app.get('/api/cre/status', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    data: {
+      workflowId: 'compliguard-compliance-monitor',
+      description: 'Reads Chainlink PoR + BTC/USD feeds on mainnet, evaluates compliance, anchors on Sepolia',
+      pipeline: [
+        'EVM Read: WBTC Proof of Reserve (0xa81F...ea4e)',
+        'EVM Read: BTC/USD Price Feed (0xF403...E88c)',
+        'EVM Read: WBTC totalSupply (0x2260...C599)',
+        'Policy Evaluation: 4-control worst-of aggregation',
+        'HTTP POST: Notify backend with result',
+        'EVM Write: Anchor report on Sepolia (0xf9Ba...71b9)',
+      ],
+      lastResult: lastCREWorkflowResult,
+      cliCommand: 'cre workflow simulate compliance-monitor --target staging-settings',
+    },
+    timestamp: new Date(),
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 3001;
 
@@ -691,6 +760,9 @@ app.listen(PORT, () => {
   console.log(`  GET  /api/compliance/status   - Current compliance result`);
   console.log(`  GET  /api/compliance/history  - Compliance evaluation history`);
   console.log(`  POST /api/run                 - Run compliance check (judge demo)`);
+  console.log('  ─── CRE Workflow ────────────────────────────────────────');
+  console.log(`  GET  /api/cre/status          - CRE workflow status + last result`);
+  console.log(`  POST /api/cre/result          - Receive CRE workflow result`);
   console.log('  ─── Simulation ──────────────────────────────────────────');
   console.log(`  POST /api/simulate/scenario   - Switch scenario (healthy|at_risk|non_compliant)`);
   console.log(`  POST /api/simulate            - Update simulation parameters`);

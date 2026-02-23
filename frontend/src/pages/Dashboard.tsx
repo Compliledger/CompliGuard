@@ -15,7 +15,7 @@ import OnboardingModal from '@/components/OnboardingModal';
 import ReserveGauge from '@/components/ReserveGauge';
 import ReportDownload from '@/components/ReportDownload';
 import { fetchComplianceStatus } from '@/lib/api';
-import { ComplianceStatus } from '@/lib/types';
+import { ComplianceStatus, toTrafficLight } from '@/lib/types';
 import { Loader2, AlertTriangle, Brain, Activity, Play, CheckCircle, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -79,16 +79,17 @@ const Dashboard = () => {
     return () => clearInterval(timer);
   }, [lastFetch]);
 
-  const statusGradient = data?.status === 'RED'
+  const tl = toTrafficLight(data?.status || 'GREEN');
+  const statusGradient = tl === 'RED'
     ? 'from-red-400 via-blue-400 to-red-400'
-    : data?.status === 'YELLOW'
+    : tl === 'YELLOW'
     ? 'from-yellow-400 via-blue-400 to-yellow-400'
     : 'from-blue-400 via-cyan-300 to-blue-400';
 
   return (
     <div className="min-h-screen bg-background relative">
       {/* Animated aurora background that shifts with status */}
-      <AuroraBackground status={data?.status || 'GREEN'} />
+      <AuroraBackground status={tl} />
 
       {/* Subtle dot grid overlay */}
       <div className="fixed inset-0 dot-grid opacity-10 dark:opacity-[0.03] pointer-events-none z-[1]" />
@@ -249,7 +250,7 @@ const Dashboard = () => {
                 <StatusBadge status={data.status} />
               </div>
               <ReserveGauge
-                status={data.status}
+                status={tl}
                 ratio={data.controls?.find(c => c.controlType === 'RESERVE_RATIO')?.value}
               />
             </motion.div>

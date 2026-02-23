@@ -132,16 +132,28 @@ npm run dev
 
 ## 🔗 Chainlink CRE Files (Required for Submission)
 
+### CRE Workflow (Production — compiled to WASM, runs on DON)
+
 | File | Purpose |
-|------|---------|
-| [`cre-workflow/main.ts`](./cre-workflow/main.ts) | **Primary CRE workflow** — `Runner`, `handler`, `CronCapability`, `HTTPClient`, `ConfidentialHTTPClient`, `EVMClient`, `runtime.report()` |
-| [`cre-workflow/config.json`](./cre-workflow/config.json) | Workflow configuration (schedule, API URLs, report contract address) |
+|------|--------|
+| [`cre-workflow/compliance-monitor/main.ts`](./cre-workflow/compliance-monitor/main.ts) | **Primary CRE workflow** — `EVMClient` reads Chainlink PoR + BTC/USD feeds, deterministic policy evaluation, `writeReport()` to Sepolia |
+| [`cre-workflow/compliance-monitor/config.staging.json`](./cre-workflow/compliance-monitor/config.staging.json) | Feed addresses (WBTC PoR, BTC/USD, WBTC ERC20), Sepolia report contract, cron schedule |
+| [`cre-workflow/compliance-monitor/workflow.yaml`](./cre-workflow/compliance-monitor/workflow.yaml) | CRE workflow metadata (name, entry point, config paths, secrets path) |
+| [`cre-workflow/project.yaml`](./cre-workflow/project.yaml) | Global CRE project config — RPC endpoints for mainnet + Sepolia |
 | [`cre-workflow/secrets.yaml`](./cre-workflow/secrets.yaml) | CRE Vault secret declarations (`RESERVE_API_KEY`, `LIABILITY_API_KEY`) |
+| [`cre-workflow/contracts/abi/AggregatorV3.ts`](./cre-workflow/contracts/abi/AggregatorV3.ts) | Chainlink AggregatorV3Interface ABI (latestRoundData, decimals) |
+| [`cre-workflow/contracts/abi/ERC20.ts`](./cre-workflow/contracts/abi/ERC20.ts) | ERC20 ABI subset (totalSupply) for WBTC circulating supply |
 | [`cre-workflow/README.md`](./cre-workflow/README.md) | CRE setup, simulation, and deployment guide |
+
+### Backend Integration (Node.js — live Chainlink data)
+
+| File | Purpose |
+|------|--------|
+| [`src/api/chainlink-por-reader.ts`](./src/api/chainlink-por-reader.ts) | Reads WBTC PoR + BTC/USD feeds via `viem` — live reserve & liability data |
+| [`src/api/server.ts`](./src/api/server.ts) | API server with live/simulation mode toggle, compliance endpoints |
 | [`src/cre/workflow.ts`](./src/cre/workflow.ts) | Local CRE workflow executor (orchestrates engine + API clients) |
 | [`src/cre/http.ts`](./src/cre/http.ts) | HTTP adapter (Node ↔ CRE mode switching) |
 | [`src/cre/confidential-http.ts`](./src/cre/confidential-http.ts) | Confidential HTTP bridge (local fallback; CRE uses SDK directly) |
-| [`src/cre/run.ts`](./src/cre/run.ts) | Local workflow runner (`npm run workflow`) |
 | [`docs/privacy-boundary.md`](./docs/privacy-boundary.md) | Privacy boundary architecture and data classification |
 
 ---
@@ -149,12 +161,17 @@ npm run dev
 ## 🧪 Run with CRE (Simulation / Deployment)
 
 ```bash
-# Simulate the CRE workflow via CLI
+# Navigate to CRE project
 cd cre-workflow
-cre workflow simulate --config config.json --secrets secrets.yaml main.ts
 
-# Deploy to CRE network
-cre workflow deploy --config config.json --secrets secrets.yaml main.ts
+# Install workflow dependencies
+cd compliance-monitor && bun install && cd ..
+
+# Simulate the CRE workflow via CLI
+cre workflow simulate compliance-monitor --target staging-settings
+
+# Deploy to CRE network (Early Access — requires approval)
+cre workflow deploy compliance-monitor --target production-settings
 ```
 
 **Local workflow run (without CRE CLI):**
@@ -324,49 +341,62 @@ A typical demonstration (3–5 minutes):
 
 ```
 CompliGuard/
-├── cre-workflow/              # Chainlink CRE workflow (production)
-│   ├── main.ts                # CRE SDK workflow (Runner, handler, ConfidentialHTTP)
-│   ├── config.json            # Workflow configuration
-│   ├── secrets.yaml           # CRE Vault secret declarations
-│   ├── .env.example           # Environment template
-│   └── README.md              # CRE setup guide
+├── cre-workflow/                       # Chainlink CRE project (compiled to WASM)
+│   ├── compliance-monitor/             # CRE workflow subdirectory
+│   │   ├── main.ts                     # Workflow: EVM reads + policy eval + Sepolia write
+│   │   ├── config.staging.json         # Feed addresses, API URLs, cron schedule
+│   │   ├── config.production.json      # Production config
+│   │   ├── workflow.yaml               # CRE workflow metadata
+│   │   ├── package.json                # CRE SDK + viem + zod
+│   │   └── tsconfig.json               # TypeScript config
+│   ├── contracts/abi/                  # On-chain ABI definitions
+│   │   ├── AggregatorV3.ts             # Chainlink AggregatorV3Interface
+│   │   ├── ERC20.ts                    # ERC20 totalSupply
+│   │   └── index.ts                    # Barrel export
+│   ├── project.yaml                    # Global CRE config (RPCs)
+│   ├── secrets.yaml                    # CRE Vault secret declarations
+│   └── .env.example                    # Environment template
 ├── src/
-│   ├── core/                  # Core policy engine
-│   │   ├── engine.ts          # Deterministic compliance engine
-│   │   ├── ai-reasoning.ts    # AI reasoning agent (advisory only)
-│   │   ├── audit.ts           # Tamper-proof audit logger
-│   │   ├── validation.ts      # Zod schema validation
-│   │   ├── rules/             # 4 compliance rules
+│   ├── core/                           # Core policy engine
+│   │   ├── engine.ts                   # Deterministic compliance engine
+│   │   ├── ai-reasoning.ts             # AI reasoning agent (advisory only)
+│   │   ├── audit.ts                    # Tamper-proof audit logger
+│   │   ├── validation.ts               # Zod schema validation
+│   │   ├── rules/                      # 4 compliance rules
 │   │   │   ├── reserve-ratio.rule.ts
 │   │   │   ├── proof-freshness.rule.ts
 │   │   │   ├── asset-quality.rule.ts
 │   │   │   └── asset-concentration.rule.ts
-│   │   └── types.ts           # Type definitions
-│   ├── api/                   # API layer
-│   │   ├── server.ts          # API server + compliance status endpoints
-│   │   └── clients.ts         # Reserve/liability API clients (retry, cache)
-│   ├── cre/                   # CRE integration (local mode)
-│   │   ├── workflow.ts        # Local CRE workflow executor
-│   │   ├── http.ts            # HTTP adapter (Node/CRE mode)
-│   │   ├── confidential-http.ts # Confidential HTTP bridge
-│   │   └── run.ts             # CLI runner
-│   └── utils/                 # Utilities (hash, logger)
-├── tests/                     # 38 tests (engine, AI, audit, determinism, integration)
+│   │   └── types.ts                    # Type definitions
+│   ├── api/                            # API layer
+│   │   ├── server.ts                   # API server + live Chainlink data
+│   │   ├── chainlink-por-reader.ts     # On-chain PoR + BTC/USD + WBTC supply reader
+│   │   └── clients.ts                  # Reserve/liability API clients
+│   ├── cre/                            # CRE integration (local mode)
+│   │   ├── workflow.ts                 # Local CRE workflow executor
+│   │   ├── http.ts                     # HTTP adapter (Node/CRE mode)
+│   │   ├── confidential-http.ts        # Confidential HTTP bridge
+│   │   └── run.ts                      # CLI runner
+│   └── utils/                          # Utilities (hash, logger)
+├── frontend/                           # React dashboard (Vercel)
+├── contracts/                          # Solidity compliance contract (Sepolia)
+├── tests/                              # Unit + integration tests
 ├── docs/
-│   └── privacy-boundary.md    # Privacy boundary architecture
-└── progress.md                # Milestone tracker
+│   └── privacy-boundary.md             # Privacy boundary architecture
+└── progress.md                         # Milestone tracker
 ```
 
 ---
 
 ## 🏁 Hackathon Tracks
 
-| Track | Status |
-|-------|--------|
-| Risk & Compliance | ✅ Primary |
-| Privacy (Confidential HTTP) | ✅ Primary |
-| AI | ➕ Supporting |
-| Infrastructure / Orchestration | ➕ Supporting |
+| Track | Status | Key Evidence |
+|-------|--------|------|
+| **Best Use of CRE** | ✅ Primary | Full CRE workflow: EVM reads + HTTP + cron trigger + EVM write |
+| **Best Use of Chainlink Data** | ✅ Primary | Reads WBTC PoR + BTC/USD price feeds on Ethereum mainnet |
+| **Privacy Track** | ✅ Primary | Confidential HTTP ready; raw values never leave DON |
+| **DeFi Track** | ✅ Primary | Automated compliance monitoring for wrapped-asset reserves |
+| **AI** | ➕ Supporting | Human-readable explanations (non-decisional) |
 
 ---
 

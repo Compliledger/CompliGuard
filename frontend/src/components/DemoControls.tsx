@@ -5,7 +5,7 @@ import {
   Copy, Check, ExternalLink, Anchor, ChevronDown, ChevronUp, Beaker, Info
 } from 'lucide-react';
 import { switchScenario, runComplianceCheck, fetchComplianceHistory, RunResult } from '@/lib/api';
-import { ComplianceStatus } from '@/lib/types';
+import { ComplianceStatus, toTrafficLight } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 export type DemoPhase = 'idle' | 'scenario_set' | 'running' | 'done' | 'anchored';
@@ -111,11 +111,12 @@ const DemoControls = forwardRef<HTMLDivElement, DemoControlsProps>(({ onStatusUp
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const statusColors: Record<string, string> = {
+  const statusColorsMap: Record<string, string> = {
     GREEN: 'text-compliance-green',
     YELLOW: 'text-compliance-yellow',
     RED: 'text-compliance-red',
   };
+  const getStatusColor = (s: string) => statusColorsMap[toTrafficLight(s)] || 'text-foreground';
 
   return (
     <motion.div
@@ -300,7 +301,7 @@ const DemoControls = forwardRef<HTMLDivElement, DemoControlsProps>(({ onStatusUp
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-secondary/30 rounded-xl p-3 space-y-1">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</p>
-                <p className={`text-lg font-bold ${statusColors[runResult.status] || 'text-foreground'}`}>
+                <p className={`text-lg font-bold ${getStatusColor(runResult.status)}`}>
                   {runResult.status}
                 </p>
               </div>
@@ -440,7 +441,7 @@ const DemoControls = forwardRef<HTMLDivElement, DemoControlsProps>(({ onStatusUp
                     className="flex items-center justify-between bg-secondary/30 rounded-xl px-3 py-2"
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold ${statusColors[entry.status] || 'text-foreground'}`}>
+                      <span className={`text-xs font-bold ${getStatusColor(entry.status)}`}>
                         {entry.status}
                       </span>
                       <span className="text-[10px] text-muted-foreground font-mono">

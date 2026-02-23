@@ -1,0 +1,16 @@
+# CompliGuard CRE Project — Global Configuration
+# Shared settings for all workflows in this project.
+
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-mainnet
+      url: https://eth.llamarpc.com
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com
+
+production-settings:
+  rpcs:
+    - chain-name: ethereum-mainnet
+      url: https://eth.llamarpc.com
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com

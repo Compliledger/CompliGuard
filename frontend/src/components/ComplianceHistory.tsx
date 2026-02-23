@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, ChevronDown, ChevronUp, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { fetchComplianceHistory } from '@/lib/api';
-import { ComplianceStatus } from '@/lib/types';
+import { ComplianceStatus, toTrafficLight } from '@/lib/types';
 
 const statusIcons = {
   GREEN: CheckCircle,
@@ -60,8 +60,9 @@ const ComplianceHistory = () => {
           <div className="space-y-1.5">
             <AnimatePresence initial={false}>
               {visibleItems.map((entry, i) => {
-                const Icon = statusIcons[entry.status];
-                const colors = statusColors[entry.status];
+                const tl = toTrafficLight(entry.status);
+                const Icon = statusIcons[tl];
+                const colors = statusColors[tl];
                 const time = new Date(entry.timestamp);
 
                 return (

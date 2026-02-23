@@ -1,0 +1,18 @@
+{
+  "schedule": "0 */5 * * * *",
+  "backendApiUrl": "https://compli-guard-api-production.up.railway.app",
+  "evms": [
+    {
+      "chainName": "ethereum-mainnet",
+      "porFeedAddress": "0xa81FE04086865e63E12dD3776978E49DEEa2ea4e",
+      "btcUsdFeedAddress": "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c",
+      "wbtcTokenAddress": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+      "wbtcDecimals": 8
+    }
+  ],
+  "sepolia": {
+    "chainName": "ethereum-testnet-sepolia",
+    "reportContractAddress": "0xf9BaAE04C412c23BC750E79C84A19692708E71b9",
+    "gasLimit": "500000"
+  }
+}
