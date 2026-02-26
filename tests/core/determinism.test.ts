@@ -20,8 +20,9 @@ describe('Determinism Verification', () => {
     reserves: {
       totalValue: 105_000_000,
       assets: [
-        { id: 's1', name: 'T-Bills', symbol: 'TBILL', value: 78_750_000, riskLevel: AssetRiskLevel.SAFE, percentage: 75 },
-        { id: 's2', name: 'Cash', symbol: 'CASH', value: 26_250_000, riskLevel: AssetRiskLevel.SAFE, percentage: 25 }
+        { id: 's1', name: 'T-Bills', symbol: 'TBILL', value: 57_750_000, riskLevel: AssetRiskLevel.SAFE, percentage: 55 },
+        { id: 's2', name: 'Cash', symbol: 'CASH', value: 31_500_000, riskLevel: AssetRiskLevel.SAFE, percentage: 30 },
+        { id: 's3', name: 'Repo', symbol: 'REPO', value: 15_750_000, riskLevel: AssetRiskLevel.SAFE, percentage: 15 }
       ],
       attestationTimestamp: new Date(),
       attestationHash: '0xdeadbeef',
@@ -110,11 +111,10 @@ describe('Determinism Verification', () => {
         ...fixedInput.reserves,
         totalValue: 101_000_000,
         attestationTimestamp: new Date(),
-        assets: [{
-          id: 's1', name: 'T-Bills', symbol: 'TBILL',
-          value: 101_000_000,
-          riskLevel: AssetRiskLevel.SAFE, percentage: 100
-        }]
+        assets: [
+          { id: 's1', name: 'T-Bills', symbol: 'TBILL', value: 55_550_000, riskLevel: AssetRiskLevel.SAFE, percentage: 55 },
+          { id: 's2', name: 'Cash', symbol: 'CASH', value: 45_450_000, riskLevel: AssetRiskLevel.SAFE, percentage: 45 }
+        ]
       }
     };
 

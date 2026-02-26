@@ -31,8 +31,9 @@ describe('Integration: Full Pipeline', () => {
     reserves: {
       totalValue: 105_000_000,
       assets: [
-        { id: 's1', name: 'T-Bills', symbol: 'TBILL', value: 78_750_000, riskLevel: AssetRiskLevel.SAFE, percentage: 75 },
-        { id: 's2', name: 'Cash', symbol: 'CASH', value: 26_250_000, riskLevel: AssetRiskLevel.SAFE, percentage: 25 }
+        { id: 's1', name: 'T-Bills', symbol: 'TBILL', value: 57_750_000, riskLevel: AssetRiskLevel.SAFE, percentage: 55 },
+        { id: 's2', name: 'Cash', symbol: 'CASH', value: 31_500_000, riskLevel: AssetRiskLevel.SAFE, percentage: 30 },
+        { id: 's3', name: 'Repo', symbol: 'REPO', value: 15_750_000, riskLevel: AssetRiskLevel.SAFE, percentage: 15 }
       ],
       attestationTimestamp: new Date(),
       attestationHash: '0xabc',

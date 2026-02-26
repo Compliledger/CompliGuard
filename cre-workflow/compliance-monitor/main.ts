@@ -24,9 +24,7 @@ import {
   EVMClient,
   handler,
   ok,
-  json,
   consensusIdenticalAggregation,
-  consensusMedianAggregation,
   Runner,
   getNetwork,
   LAST_FINALIZED_BLOCK_NUMBER,
@@ -34,7 +32,6 @@ import {
   bytesToHex,
   hexToBase64,
   type Runtime,
-  type NodeRuntime,
   type HTTPSendRequester,
 } from "@chainlink/cre-sdk"
 import { z } from "zod"
@@ -407,7 +404,7 @@ const notifyBackend = (
   })
 
   const req = {
-    url: `${config.backendApiUrl}/api/run`,
+    url: `${config.backendApiUrl}/api/cre/result`,
     method: "POST" as const,
     headers: {
       "Content-Type": "application/json",
