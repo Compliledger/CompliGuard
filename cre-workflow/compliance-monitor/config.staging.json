@@ -1,5 +1,5 @@
 {
-  "schedule": "0 */5 * * * *",
+  "schedule": "0 */10 * * * *",
   "backendApiUrl": "https://compli-guard-api-production.up.railway.app",
   "evms": [
     {
