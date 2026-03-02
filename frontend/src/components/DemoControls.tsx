@@ -343,15 +343,33 @@ const DemoControls = forwardRef<HTMLDivElement, DemoControlsProps>(({ onStatusUp
               {/* TX Hash (if anchor enabled) */}
               {runResult.txHash && (
                 <>
-                  {/* Anchored confirmation banner */}
+                  {/* Anchored confirmation banner - color matches status */}
                   <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-3 bg-compliance-green/10 border border-compliance-green/20 rounded-xl p-3"
+                    className={`flex items-center gap-3 rounded-xl p-3 ${
+                      toTrafficLight(runResult.status) === 'GREEN'
+                        ? 'bg-compliance-green/10 border border-compliance-green/20'
+                        : toTrafficLight(runResult.status) === 'YELLOW'
+                        ? 'bg-compliance-yellow/10 border border-compliance-yellow/20'
+                        : 'bg-compliance-red/10 border border-compliance-red/20'
+                    }`}
                   >
-                    <CheckCircle className="h-5 w-5 text-compliance-green shrink-0" />
+                    <CheckCircle className={`h-5 w-5 shrink-0 ${
+                      toTrafficLight(runResult.status) === 'GREEN'
+                        ? 'text-compliance-green'
+                        : toTrafficLight(runResult.status) === 'YELLOW'
+                        ? 'text-compliance-yellow'
+                        : 'text-compliance-red'
+                    }`} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-bold text-compliance-green">Compliance Report Anchored</p>
+                      <p className={`text-xs font-bold ${
+                        toTrafficLight(runResult.status) === 'GREEN'
+                          ? 'text-compliance-green'
+                          : toTrafficLight(runResult.status) === 'YELLOW'
+                          ? 'text-compliance-yellow'
+                          : 'text-compliance-red'
+                      }`}>Compliance Report Anchored — Status: {runResult.status}</p>
                       <p className="text-[10px] text-muted-foreground">Transaction submitted to Sepolia testnet</p>
                     </div>
                     <a

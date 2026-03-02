@@ -16,19 +16,24 @@ const statusColors = {
   RED: 'text-compliance-red bg-compliance-red/10 border-compliance-red/20',
 };
 
-const ComplianceHistory = () => {
+interface ComplianceHistoryProps {
+  refreshTrigger?: number;
+}
+
+const ComplianceHistory = ({ refreshTrigger }: ComplianceHistoryProps) => {
   const [history, setHistory] = useState<ComplianceStatus[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true);
       const data = await fetchComplianceHistory(20);
       setHistory(data);
       setLoading(false);
     };
     load();
-  }, []);
+  }, [refreshTrigger]);
 
   const visibleItems = expanded ? history : history.slice(0, 5);
 

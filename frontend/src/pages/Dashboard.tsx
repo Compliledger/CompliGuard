@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [lastFetch, setLastFetch] = useState(Date.now());
   const [demoPhase, setDemoPhase] = useState<DemoPhase>('idle');
   const [demoDetail, setDemoDetail] = useState<string>('');
+  const [historyRefresh, setHistoryRefresh] = useState(0);
   const demoRef = useRef<HTMLDivElement>(null);
 
   const scrollToDemo = () => {
@@ -59,6 +60,7 @@ const Dashboard = () => {
       setData(result);
       setError(null);
       setLastFetch(Date.now());
+      setHistoryRefresh(prev => prev + 1); // Trigger history refresh
     } catch (e: any) {
       setError(e.message || 'Failed to fetch compliance status.');
     } finally {
@@ -312,7 +314,7 @@ const Dashboard = () => {
 
             {/* Compliance History Timeline */}
             <motion.div variants={fadeUp}>
-              <ComplianceHistory />
+              <ComplianceHistory refreshTrigger={historyRefresh} />
             </motion.div>
           </motion.div>
         )}
